@@ -1,7 +1,7 @@
 library(DESeq2)
 
 # GLOBAL VARIABLES
-COUNT_DATA_FILENAME <- "sasc326.rda"
+COUNT_DATA_FILENAME <- "data/sasc326.rda"
 
 load_one_rdata_object <- function(file_path) {
     # Gets one object from rdata (in our case "gte") and returns it
