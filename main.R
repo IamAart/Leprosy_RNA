@@ -7,8 +7,8 @@ COUNT_DATA_FILENAME <- "data/sasc326.rda"
 COUNTS_VARIABLE_NAME <- "countsMatrix"
 SAMPLES_VARIABLE_NAME <- "samplesData"
 FEATURES_VARIABLE_NAME <- "featuresData"
-# DESIGN <- ~ type
-DESIGN <- ~ group + YOB + gender
+DESIGN <- ~ type
+DESIGN <- ~group + YOB + gender
 
 load_one_rdata_object <- function(file_path) {
     # Gets one object from rdata (in our case "gte") and returns it
@@ -40,8 +40,8 @@ create_deseq_result <- function(count_data, design) {
     deseq
 }
 
-create_edgeR_result <- function(count_data) {
-    # put gene name into rownames
+prepare_dge_list <- function(count_data) {
+    # put features as rownames
     rownames(count_data[[COUNTS_VARIABLE_NAME]]) <- count_data[[COUNTS_VARIABLE_NAME]][,1]
     count_data[[COUNTS_VARIABLE_NAME]][,1] <- NULL
 
@@ -50,9 +50,15 @@ create_edgeR_result <- function(count_data) {
         samples = count_data[[SAMPLES_VARIABLE_NAME]],
         # genes = count_data[[FEATURES_VARIABLE_NAME]]
     )
-    # filter by genes with low counts
-    keep <- filterByExpr(y = dge_list)
-    dge <- dge_list[keep, , keep.lib.sizes = FALSE]
+    dge <- calcNormFactors(dge_list)
+
+    keep <- filterByExpr(y = dge)
+    dge <- dge[keep, , keep.lib.sizes = FALSE]
+    dge
+}
+
+create_edgeR_result <- function(count_data) {
+    dge <- prepare_dge_list(count_data)
     #normalization
     dge <- calcNormFactors(dge)
     # estimating dispersions with qCML
@@ -61,8 +67,17 @@ create_edgeR_result <- function(count_data) {
     # Check DGE
     et <- exactTest(disp)
     et
-    # top_dge <- topTags(et, n="Inf")
-    # print(summary(decideTests(object = et, lfc = 1)))
+
+}
+
+create_limma_voom_result <- function(count_data) {
+    dge <- prepare_dge_list(count_data)
+
+    design <- model.matrix(DESIGN, count_data[[SAMPLES_VARIABLE_NAME]])
+    v <- voom(dge, design, plot=TRUE)
+    vfit <- lmFit(v, design)
+    tfit <- treat(vfit, lfc=1)
+    tfit
 
 }
 
@@ -70,6 +85,9 @@ count_data <- load_one_rdata_object(COUNT_DATA_FILENAME)
 
 # edgeR
 # plotMD(create_loom_result(count_data))
+
+# Limma Voom
+# plotMD(create_limma_voom_result(count_data))
 
 # DESeq2
 # DESeq2::plotMA(results(create_deseq_result(count_data, DESIGN)))
