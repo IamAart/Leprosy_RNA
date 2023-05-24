@@ -1,6 +1,7 @@
 library(DESeq2)
 library(ggplot2)
 library(edgeR)
+library(Glimma)
 
 # GLOBAL VARIABLES
 COUNT_DATA_FILENAME <- "data/sasc326.rda"
@@ -8,7 +9,7 @@ COUNTS_VARIABLE_NAME <- "countsMatrix"
 SAMPLES_VARIABLE_NAME <- "samplesData"
 FEATURES_VARIABLE_NAME <- "featuresData"
 # DESIGN <- ~ type
-DESIGN <- ~group + YOB + gender
+DESIGN <- ~ group
 
 load_one_rdata_object <- function(file_path) {
     # Gets one object from rdata (in our case "gte") and returns it
@@ -32,19 +33,23 @@ create_deseq_result <- function(count_data, design, common_bool, feat_bool) {
         features <- features[common, ]
     }
 
-    dds <- DESeqDataSetFromMatrix(
-        countData = counts,
-        colData = count_data[[SAMPLES_VARIABLE_NAME]],
-        design = design
-    )
-
     if (feat_bool) {
-        # mcols(dds) cannot have columns named "seqnames", "ranges", "strand", "start", "end", "width", "element"
+        # rowData cannot have columns named "seqnames", "ranges", "strand", "start", "end", "width", "element"
         names(features)[names(features) == 'start'] <- 'start_loc'
         names(features)[names(features) == 'end'] <- 'end_loc'
-        mcols(dds) <- cbind(mcols(dds), features)
+        dds <- DESeqDataSetFromMatrix(
+            countData = counts,
+            colData = count_data[[SAMPLES_VARIABLE_NAME]],
+            rowData = features,
+            design = design
+        )
+    } else {
+        dds <- DESeqDataSetFromMatrix(
+            countData = counts,
+            colData = count_data[[SAMPLES_VARIABLE_NAME]],
+            design = design
+        )
     }
-
     deseq <- DESeq(dds)
     deseq
 }
@@ -84,6 +89,7 @@ prepare_dge_list <- function(count_data, common_bool, feat_bool) {
 
 create_edgeR_result <- function(count_data, common, feat) {
     dge <- prepare_dge_list(count_data, common, feat)
+
     #normalization
     dge <- calcNormFactors(dge)
     # estimating dispersions with qCML
@@ -91,8 +97,8 @@ create_edgeR_result <- function(count_data, common, feat) {
 
     # Check DGE
     et <- exactTest(disp)
+    print(et)
     et
-
 }
 
 create_limma_voom_result <- function(count_data, common, feat) {
@@ -100,9 +106,13 @@ create_limma_voom_result <- function(count_data, common, feat) {
 
     design <- model.matrix(DESIGN, count_data[[SAMPLES_VARIABLE_NAME]])
     v <- voom(dge, design, plot=TRUE)
-    vfit <- lmFit(v, design)
-    tfit <- treat(vfit, lfc=1)
-    tfit
+    fit <- lmFit(v, design)
+    # contr <- contrasts(group)
+    # tmp <- contrasts.fit(fit, contr)
+    tmp <- eBayes(fit)
+    # tfit <- treat(vfit, lfc=1)
+    # tfit
+    tmp
 
 }
 
@@ -119,10 +129,20 @@ column_to_rownames <- function(df, column_number) {
 count_data <- load_one_rdata_object(COUNT_DATA_FILENAME)
 
 # edgeR
-# plotMD(create_loom_result(count_data))
+dge_result <- create_edgeR_result(count_data, TRUE, TRUE)
 
 # Limma Voom
-# plotMD(create_limma_voom_result(count_data))
+# dge_result <- create_limma_voom_result(count_data, TRUE, TRUE)
 
 #DESeq2
-DESeq2::plotMA(results(create_deseq_result(count_data, DESIGN, TRUE, TRUE)))
+# dge_result <- create_deseq_result(count_data, DESIGN, TRUE, TRUE)
+
+# TODO Showcase results in the same way (thinking Heatmap and Histogram)
+
+# showcase results in a MA plot and Table
+# glimmaMA(dge_result)
+
+# showcase results in a Volcano plot
+glimmaVolcano(dge_result)
+
+#TODO optimize Design
