@@ -14,6 +14,7 @@ COMPARISON <- "First-HHC"
 DESIGN <- ~ group
 
 count_data <- load_one_rdata_object(COUNT_DATA_FILENAME)
+# TODO: Look into DESeq2 and Limma Voom (large Log2foldchange values)
 dge_result <- perform_DGE_analysis(
     data = count_data,
     dge_type = DGE_TYPE,
@@ -24,6 +25,8 @@ dge_result <- perform_DGE_analysis(
     f_name = FEATURES_VARIABLE_NAME,
     s_name = SAMPLES_VARIABLE_NAME
 )
+
+# TODO: return the used values instead of re-assigning
 
 if (DGE_TYPE == "DESeq2") {
 	data <- as.data.frame(dge_result$result)
@@ -36,6 +39,8 @@ if (DGE_TYPE == "DESeq2") {
 	genes <- dge_result$genes
 }
 
+# TODO: Fix the resolution of the plotted data
+# TODO: showcase in different kind of figures: Venn Diagram
 save_and_show(
 	data = as.data.frame(data),
 	genes = genes,
