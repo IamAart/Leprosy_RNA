@@ -22,6 +22,8 @@ dds <- DESeqDataSetFromMatrix(countData = counts, colData = samples, design = ~ 
 deseq <- DESeq(dds)
 res <- results(deseq, c("group", "First", "HHC"), pAdjustMethod = "BH")
 
+# Showcase Result in Glimma
 glimmaMA(deseq)
 
+# Save data in table with cut off added to cut the data at that p value
 make_save_table(res, "padj", CUT_OFF, "pvalue", features, "./data/DESeq2/all_nc_data-First-HHC")
