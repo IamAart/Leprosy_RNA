@@ -1,14 +1,12 @@
 library(VennDiagram)
-library (purrr)
 library(stringr)
-library(readxl)
 
 source("common.R")
 
 # Get Gene names or Other column info (Ensemble names) from the saved data
-limma <- readxl::read_excel("./data/LimmaVoom/data-First-HHC.xlsx")[[VENN_NAMES]]
-edger <- readxl::read_excel("./data/EdgeR/data-First-HHC.xlsx")[[VENN_NAMES]]
-deseq <- readxl::read_excel("./data/DESeq2/data-First-HHC.xlsx")[[VENN_NAMES]]
+limma <- read.csv("./data/LimmaVoom/all_nc_data-First-HHC.csv")[[VENN_NAMES]]
+edger <- read.csv("./data/EdgeR/all_nc_data-First-HHC.csv")[[VENN_NAMES]]
+deseq <- read.csv("./data/DESeq2/all_nc_data-First-HHC.csv")[[VENN_NAMES]]
 
 # Create Venn Diagram
 v <- venn.diagram(
@@ -21,7 +19,7 @@ v <- venn.diagram(
 )
 
 # Create Names on Diagram
-overlaps <- calculate.overlap(list(limma, edger, deseq))
+overlaps <- VennDiagram::calculate.overlap(list(limma, edger, deseq))
 indx <- as.numeric(substr(names(overlaps),2,2))
 for (i in seq_along(overlaps)){
   v[[6 + indx[i] ]]$label <- paste(overlaps[[i]], collapse = "\n")
