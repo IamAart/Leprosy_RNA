@@ -1,3 +1,5 @@
+# EVENTUALLY NOT USED DUE TO AMOUNT OF DGE GENES
+
 library(VennDiagram)
 library(stringr)
 
@@ -6,7 +8,9 @@ source("common.R")
 # Get Gene names or Other column info (Ensemble names) from the saved data
 limma <- read.csv("./data/LimmaVoom/all_nc_data-First-HHC.csv")[[VENN_NAMES]]
 edger <- read.csv("./data/EdgeR/all_nc_data-First-HHC.csv")[[VENN_NAMES]]
-deseq <- read.csv("./data/DESeq2/all_nc_data-First-HHC.csv")[[VENN_NAMES]]
+deseq <- read.csv("./data/DESeq2/new_all_nc_data-First-HHC.csv")[[VENN_NAMES]]
+
+print(length(unique(deseq[1:183])))
 
 # Create Venn Diagram
 v <- venn.diagram(

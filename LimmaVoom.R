@@ -1,8 +1,6 @@
 # Loading R packages
 library(limma)
 library(edgeR)
-library(Glimma)
-library(dplyr)
 
 source("common.R")
 
@@ -33,8 +31,9 @@ fit <- contrasts.fit(fit, contrasts = contrast)
 ebayes <- eBayes(fit)
 res <-  topTable(ebayes, n=Inf, adjust.method = "BH")
 
-# Showcase Results with Glimma
-glimmaMA(ebayes)
-
 # Save data in table with cut off added to cut the data at that p value
-make_save_table(res, "adj.P.Val", CUT_OFF, "P.Value", features, "./data/LimmaVoom/all_nc_data-First-HHC")
+res <- make_save_table(res, features, "./data/LimmaVoom/NON_CODING_LimmaVoom_RNA_SEQ")
+
+# Showcase Result in Volcano Plot
+plot <- VolcanoPlot(res)
+ggplot_build(plot)

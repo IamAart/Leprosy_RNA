@@ -1,7 +1,5 @@
 # Loading R packages
 library(edgeR)
-library(Glimma)
-library(dplyr)
 
 source("common.R")
 
@@ -28,13 +26,14 @@ normalized_data <- normalization_edgeR(counts, samples, design)
 # Perform EdgeR Analysis
 disp <- estimateGLMCommonDisp(normalized_data,design)
 disp <- estimateGLMTrendedDisp(disp, design, method="power")
-disp <- estimateGLMTagwiseDisp(disp,design)
+disp <- estimateGLMTagwiseDisp(disp, design)
 fit <- glmFit(disp, design)
 lrt <- glmLRT(fit, contrast=contrast)
 res<- as.data.frame(topTags(lrt, n=Inf, adjust.method = "BH"))
 
-# Showcase results with Glimma
-glimmaMA(lrt)
-
 # Save data in table with cut off added to cut the data at that p value
-make_save_table(res, "FDR", CUT_OFF, "PValue", features, "./data/EdgeR/all_nc_data-First-HHC")
+res <- make_save_table(res, features, "./data/EdgeR/NON_CODING_EdgeR_RNA_SEQ")
+
+# Showcase Result in Volcano Plot
+plot <- VolcanoPlot(res)
+ggplot_build(plot)
