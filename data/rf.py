@@ -1,5 +1,4 @@
 import os
-
 import pandas as pd
 import conorm as co
 import json
@@ -10,19 +9,17 @@ from sklearn.feature_selection import SelectKBest, chi2, RFE
 from sklearn.metrics import accuracy_score, roc_curve, auc
 from sklearn.model_selection import LeaveOneOut, RandomizedSearchCV
 
-
 # Create Global Variables
 MIN = 3
 MAX = 20
-ratio = 0.8
 ITERATIONS_CROSS_VALIDATION = 5
 LIBRARY_COMBINATIONS = {
         "Only combined libraries": ["DESeq2/LimmaVoom/EdgeR"],
         "All": ["DESeq2/LimmaVoom/EdgeR", "DESeq2/EdgeR", "DESeq2/LimmaVoom", "DESeq2", "EdgeR/LimmaVoom", "EdgeR",
                 "LimmaVoom"],
-        # "DESeq2": ["DESeq2/LimmaVoom/EdgeR", "DESeq2/EdgeR", "DESeq2/LimmaVoom", "DESeq2"],
-        # "EdgeR": ["DESeq2/LimmaVoom/EdgeR", "DESeq2/EdgeR", "EdgeR/LimmaVoom", "EdgeR"],
-        # "LimmaVoom": ["DESeq2/LimmaVoom/EdgeR", "LimmaVoom/EdgeR", "DESeq2/LimmaVoom", "LimmaVoom"]
+        "DESeq2": ["DESeq2/LimmaVoom/EdgeR", "DESeq2/EdgeR", "DESeq2/LimmaVoom", "DESeq2"],
+        "LimmaVoom": ["DESeq2/LimmaVoom/EdgeR", "DESeq2/LimmaVoom", "EdgeR/LimmaVoom", "LimmaVoom"],
+        "EdgeR": ["DESeq2/LimmaVoom/EdgeR", "DESeq2/EdgeR", "EdgeR/LimmaVoom", "EdgeR"]
     }
 
 
@@ -58,29 +55,15 @@ def train_test_total_dataset():
 
 
 def get_gene_names(ensembles, features):
-    selected_genes = features[features['feature'].isin(ensembles)]
-    gene_names = selected_genes["gene_name"].tolist()
+    gene_names = list()
+    for ensembles in ensembles:
+        selected_gene = features[features['feature'] == ensembles]['gene_name'].values[0]
+        gene_names.append(selected_gene)
     return gene_names
-
-
-def compare_with_paper(ensembles):
-    all_ensembles = set(ensembles)
-    Gene_selection_paper = [
-        "ENSG00000204387", "ENSG00000198886", "ENSG00000198786", "ENSG00000198763", "ENSG00000283633",
-        "ENSG00000198804", "ENSG00000135090", "ENSG00000135597", "ENSG00000198727", "ENSG00000141933",
-        "ENSG00000138722", "ENSG00000150991", "ENSG00000248527", "ENSG00000266538", "ENSG00000006015",
-        "ENSG00000175602", "ENSG00000225864", "ENSG00000200183", "ENSG00000279227"
-    ]
-    for gene in all_ensembles:
-        if gene not in Gene_selection_paper:
-            print(f"{gene} not in paper")
-        else:
-            print(f"{gene} in paper")
 
 
 def generate_genes(library_combinations: dict, method):
     venn_data = pd.read_csv(f"./Venn_Diagrams/Ensemble_data/ENSEMBLE_{method}_VENN_DATA.csv")
-    # venn_data = pd.read_csv("./Venn_Diagrams/Ensemble_data/ENSEMBLE_NON_CODING_VENN_DATA.csv")
     genes = dict()
     for key, columns in library_combinations.items():
         for id, column in enumerate(venn_data):
@@ -98,6 +81,7 @@ def find_best_selector_genes(x_data, y_data, genes, features, min_feat_amount, m
     selectors_ensemble, selectors_gene_names = list(), list()
 
     for i in range(min_feat_amount, max_feat_amount + 1):
+        print(i)
         # Find the best genes based on Chi squared test for amount of genes
 
         if model == "chi2":
@@ -120,7 +104,6 @@ def find_best_selector_genes(x_data, y_data, genes, features, min_feat_amount, m
 
         # Save best genes with ensemble and name in different lists
         selectors_ensemble.append(selected_features)
-        print(get_gene_names(selected_features.tolist(), features))
         selectors_gene_names.append(get_gene_names(selected_features.tolist(), features))
 
     return selectors_ensemble, selectors_gene_names
@@ -179,6 +162,7 @@ def find_best_parameters(x, y, col_names):
 def perform_random_forest(selectors, x, y, iterations, gene_names, picture_path):
     results_dict = dict()
     for idx, selector in enumerate(selectors):
+        print(idx)
         selector_dict = dict()
         plot_data = dict()
         for i in range(iterations):
@@ -206,25 +190,25 @@ if __name__ == "__main__":
     features = pd.read_csv("./sasc326_features.csv")
     # Load and adjust data to correct format
     dataset = train_test_total_dataset()
-    bad_samples = dataset.drop(["s103830.003.011", "s103830.004.017"])
+    dataset = dataset.drop(["s103830.003.011", "s103830.004.017"])
     dataset = dataset.dropna(subset=["Result"])
 
     # Create x and y dataset and get gene sets from file
     x_dataset = dataset.drop(['Result'], axis=1)
     y_dataset = dataset['Result'].astype(int)
 
-    for method in ["All_GENES", "NON_CODING"]:
+    for method in ["All_GENES", "CODING", "NON_CODING"]:
         all_genes = generate_genes(LIBRARY_COMBINATIONS, method)
 
+        # Can switch below for OWN GENES
         for option, genes in all_genes.items():
             print(option)
             # find_best_parameters(x_dataset, y_dataset, genes) # Only used to find parameters once
-
             for model in ["RFE", "chi2"]:
-                dir_path = f"./Predictions/{method}/{option}/{model}/Pictures"
-                if not os.path.exists(dir_path):
-                    os.makedirs(dir_path)
-                list_selectors, gene_names = find_best_selector_genes(x_dataset, y_dataset, genes, features, MIN, MAX, model)
-                result_dict = perform_random_forest(list_selectors, x_dataset, y_dataset, ITERATIONS_CROSS_VALIDATION, gene_names, dir_path)
-                with open(f"./Predictions/{method}/{option}/{model}/results.json", 'w') as f:
-                    json.dump(result_dict, f)
+                    dir_path = f"./Predictions/{method}/{option}/{model}/Pictures"
+                    if not os.path.exists(dir_path):
+                        os.makedirs(dir_path)
+                    list_selectors, gene_names = find_best_selector_genes(x_dataset, y_dataset, genes, features, MIN, MAX, model)
+                    result_dict = perform_random_forest(list_selectors, x_dataset, y_dataset, ITERATIONS_CROSS_VALIDATION, gene_names, dir_path)
+                    with open(f"./Predictions/{method}/{option}/{model}/results.json", 'w') as f:
+                        json.dump(result_dict, f)
