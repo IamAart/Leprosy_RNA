@@ -22,7 +22,7 @@ colnames(design) <- c("HHC", "First", "Second")
 contrast <- makeContrasts(First_vs_HHC = First - HHC, levels = design)
 
 # Normalization
-normalized_data <- normalization_edgeR(counts, samples, design)
+normalized_data <- normalization_edgeR(counts, samples, design, features)
 
 # Perform Limma Voom Analysis
 voom <- voom(normalized_data, design, plot=TRUE, normalize="quantile")
@@ -32,8 +32,4 @@ ebayes <- eBayes(fit)
 res <-  topTable(ebayes, n=Inf, adjust.method = "BH")
 
 # Save data in table with cut off added to cut the data at that p value
-res <- make_save_table(res, features, "./data/LimmaVoom/NON_CODING_LimmaVoom_RNA_SEQ")
-
-# Showcase Result in Volcano Plot
-plot <- VolcanoPlot(res)
-ggplot_build(plot)
+res <- make_save_table(res, features, "./data/LimmaVoom/Test")

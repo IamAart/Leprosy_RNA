@@ -23,7 +23,3 @@ res <- results(deseq, c("group", "First", "HHC"), pAdjustMethod = "BH")
 
 # Save data in table with cut off added to cut the data at that p value
 res <- make_save_table(res, features, "./data/DESeq2/NON_CODING_DESeq2_RNA_SEQ")
-
-# Showcase Result in Volcano Plot
-plot <- VolcanoPlot(res)
-ggplot_build(plot)

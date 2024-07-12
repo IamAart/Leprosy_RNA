@@ -33,7 +33,3 @@ res<- as.data.frame(topTags(lrt, n=Inf, adjust.method = "BH"))
 
 # Save data in table with cut off added to cut the data at that p value
 res <- make_save_table(res, features, "./data/EdgeR/NON_CODING_EdgeR_RNA_SEQ")
-
-# Showcase Result in Volcano Plot
-plot <- VolcanoPlot(res)
-ggplot_build(plot)

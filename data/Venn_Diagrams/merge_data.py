@@ -1,57 +1,75 @@
 import pandas as pd
 
-COLUMN_NAME = "gene_name"  # "Row.names"
-GENE_TYPE = "All_GENES"  # "NON_CODING
 
-deseq = pd.read_csv(f"../DESeq2/{GENE_TYPE}_DESeq2_RNA_SEQ.csv")
-limma = pd.read_csv(f"../LimmaVoom/{GENE_TYPE}_LimmaVoom_RNA_SEQ.csv")
-edger = pd.read_csv(f"../EdgeR/{GENE_TYPE}_EdgeR_RNA_SEQ.csv")
+def dataset_with_selection(data, selection=None):
+    if selection is None:
+        return data
+    return data.loc[data["biotype"].isin(selection)]
 
 
-def sort_on_p_adj_val(genes, data, name):
-    value_list = list()
-    for gene in genes:
-        temp_list = list()
+def sort_on_p_adj_val(ensembles, data, name):
+    p_adj_list = list()
+    genes_list = list()
+
+    for ensemble in ensembles:
+        p_adj_value = 0
+        added_gene_flag = False
         for i in range(len(data)):
-            info = data[i][data[i].gene_name == gene]["P.Adjust"].values[0]
-            temp_list.append(info)
-        value_list.append(sum(temp_list)/len(temp_list))
-    print(value_list, genes)
-    sorted_value_list = [gene for value, gene in sorted(zip(value_list, genes))]
-    print(sorted_value_list)
-    return pd.Series(sorted_value_list, name=name)
+            if ensemble in data[i].index:
+                p_adj_value += float(data[i].loc[ensemble]["P.Adjust"])
+                if not added_gene_flag:
+                    genes_list.append(data[i].loc[ensemble]["gene_name"])
+                    added_gene_flag = True
+        p_adj_list.append(p_adj_value/len(data))
+    ensemble_series = pd.Series([ensemble for _, ensemble in sorted(zip(p_adj_list, ensembles))],name=name).reset_index(drop=True)
+    gene_name_list = pd.Series([gene for _, gene in sorted(zip(p_adj_list, genes_list))],name=name).reset_index(drop=True)
+
+    return ensemble_series, gene_name_list
 
 
-def merge_data(data_deseq, data_limma, data_edger):
-    set_deseq = data_deseq[data_deseq["col"] != "not"][COLUMN_NAME].to_list()
-    set_limma = data_limma[data_limma["col"] != "not"][COLUMN_NAME].to_list()
-    set_edger = data_edger[data_edger["col"] != "not"][COLUMN_NAME].to_list()
-
-    set_all_3 = sort_on_p_adj_val(
+def merge_data(data_deseq, data_limma, data_edger, biotype):
+    set_deseq = data_deseq[data_deseq["col"] != "not"].index.tolist()
+    set_limma = data_limma[data_limma["col"] != "not"].index.tolist()
+    set_edger = data_edger[data_edger["col"] != "not"].index.tolist()
+    # get intersects of the 3 libraries
+    set_all_3_ens, set_all_3_gene = sort_on_p_adj_val(
         list(set(set_deseq) & set(set_limma) & set(set_edger)),
         [data_deseq, data_limma, data_edger],
         "DESeq2/LimmaVoom/EdgeR"
     )
-    set_deseq_edger = sort_on_p_adj_val(
-        list(set(set_deseq) & set(set_edger)), [data_deseq, data_edger], "DESeq2/EdgeR"
+    set_deseq_edger_ens, set_deseq_edger_gene = sort_on_p_adj_val(
+        list(set(set_deseq) & set(set_edger) - set(list(set(set_deseq) & set(set_limma) & set(set_edger)))), [data_deseq, data_edger], "DESeq2/EdgeR"
     )
-    set_deseq_limma = sort_on_p_adj_val(
-        list(set(set_deseq) & set(set_limma)), [data_deseq, data_limma], "DESeq2/LimmaVoom"
+    set_deseq_limma_ens, set_deseq_limma_gene = sort_on_p_adj_val(
+        list(set(set_deseq) & set(set_limma) - set(list(set(set_deseq) & set(set_limma) & set(set_edger)))), [data_deseq, data_limma], "DESeq2/LimmaVoom"
     )
-    set_limma_edger = sort_on_p_adj_val(
-        list(set(set_limma) & set(set_edger)), [data_edger, data_limma], "EdgeR/LimmaVoom"
+    set_limma_edger_ens, set_limma_edger_gene = sort_on_p_adj_val(
+        list(set(set_limma) & set(set_edger) - set(list(set(set_deseq) & set(set_limma) & set(set_edger)))), [data_edger, data_limma], "EdgeR/LimmaVoom"
     )
-    set_deseq = sort_on_p_adj_val(set_deseq, [data_deseq], "DESeq2")
-    set_limma = sort_on_p_adj_val(set_limma, [data_limma], "LimmaVoom")
-    set_edger = sort_on_p_adj_val(set_edger, [data_edger], "EdgeR")
+    set_deseq2_ens, set_deseq2_gene = sort_on_p_adj_val(set(set_deseq) - set(set_limma) - set(set_edger), [data_deseq], "DESeq2")
+    set_limma2_ens, set_limma2_gene = sort_on_p_adj_val(set(set_limma) - set(set_edger) - set(set_deseq), [data_limma], "LimmaVoom")
+    set_edger2_ens, set_edger2_gene = sort_on_p_adj_val(set(set_edger) - set(set_limma) - set(set_deseq), [data_edger], "EdgeR")
 
-    merged_dataset = pd.concat(
-        [set_all_3, set_deseq_edger, set_deseq_limma, set_limma_edger, set_deseq, set_limma, set_edger],
+    # create combined dataframe
+    merged_dataset_ens = pd.concat(
+        [set_all_3_ens, set_deseq_edger_ens, set_deseq_limma_ens, set_limma_edger_ens, set_deseq2_ens, set_limma2_ens, set_edger2_ens],
         axis=1
     )
+    # create the files from pd
+    merged_dataset_ens.to_csv(f"ENSEMBLE_{biotype}_VENN_DATA.csv", index=False)
+    with pd.ExcelWriter(f"ENSEMBLE_{biotype}_VENN_DATA.xlsx") as writer:
+        merged_dataset_ens.to_excel(writer, index=False)
 
-    merged_dataset.to_csv(f"{GENE_TYPE}_VENN_DATA.csv", index=False)
-    with pd.ExcelWriter(f"{GENE_TYPE}_VENN_DATA.xlsx") as writer:
-        merged_dataset.to_excel(writer, index=False)
+COLUMN_NAME = "Row.names"
+NON_CODING_BIOTYPES = ["unitary_pseudogene", "unprocessed_pseudogene", "processed_pseudogene", "transcribed_unprocessed_pseudogene", "antisense", "transcribed_unitary_pseudogene", "polymorphic_pseudogene", "lincRNA", "sense_intronic", "transcribed_processed_pseudogene", "sense_overlapping", "IG_V_pseudogene", "pseudogene", "3prime_overlapping_ncRNA", "bidirectional_promoter_lncRNA", "snRNA", "miRNA", "misc_RNA", "snoRNA", "rRNA", "Mt_tRNA", "Mt_rRNA", "TR_V_pseudogene", "TR_J_pseudogene", "IG_D_gene", "IG_C_pseudogene", "IG_J_pseudogene", "scRNA", "scaRNA", "vaultRNA", "sRNA", "macro_lncRNA", "non_coding", "IG_pseudogene"]
+CODING_BIOTYPES = ["protein_coding", "processed_transcript", "TR_V_gene", "IG_V_gene", "IG_C_gene", "IG_J_gene", "TR_J_gene", "TR_C_gene", "ribozyme", "TR_D_gene", "TEC"]
 
-merge_data(deseq, limma, edger)
+deseq = pd.read_csv(f"../DESeq2/All_GENES_DESeq2_RNA_SEQ.csv", index_col=1)
+limma = pd.read_csv(f"../LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.csv", index_col=1)
+edger = pd.read_csv(f"../EdgeR/All_GENES_EdgeR_RNA_SEQ.csv", index_col=1)
+
+for biotype, selection in {"NON_CODING": NON_CODING_BIOTYPES, "CODING": CODING_BIOTYPES, "All_GENES": None}.items():
+    deseq_selection = dataset_with_selection(deseq, selection)
+    edger_selection = dataset_with_selection(edger, selection)
+    limma_selection = dataset_with_selection(limma, selection)
+    merge_data(deseq_selection, limma_selection, edger_selection, biotype)
