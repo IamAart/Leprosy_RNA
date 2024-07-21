@@ -94,7 +94,7 @@ def box_plot_libraries(data):
     plt.close(plot3)
 
 
-rf_results = pd.read_excel('./Predictions_current/analysis_rf_predictions.xlsx')
+rf_results = pd.read_excel('./Current_Comparison_SVM_RF/rf_results_13_july.xlsx')
 box_plot_rfe_vs_chi2(rf_results)
 box_plot_type_comparison(rf_results)
 box_plot_libraries(rf_results)

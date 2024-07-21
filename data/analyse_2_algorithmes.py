@@ -1,15 +1,20 @@
 import pandas as pd
 # TODO: PUSH THIS TO MAIN
 
+
+def find_gene_name(ensemble, data):
+    return data[data["Row.names"] == ensemble].iloc[0]["gene_name"]
+
+
 def combine_two_algo_data(path_1, path_2, name_1, name_2):
     data_1 = pd.read_excel(path_1)
     data_2 = pd.read_excel(path_2)
-    if {"gene_type", "feature_selection", "group_size"}.issubset(set(data_1.columns)):
-        raise Exception("Dataset of Algorithm 1 doesn't have the required columns (gene_type, feature_selection, group_size)")
-    if {"gene_type", "feature_selection", "group_size"}.issubset(set(data_2.columns)):
-        raise Exception("Dataset of Algorithm 1 doesn't have the required columns (gene_type, feature_selection, group_size)")
+    # if not ({"gene_type", "feature_selection", "group_size"}.issubset(set(data_1.columns))):
+    #     raise Exception("Dataset of Algorithm 1 doesn't have the required columns (gene_type, feature_selection, group_size)")
+    # if not ({"gene_type", "feature_selection", "group_size"}.issubset(set(data_2.columns))):
+    #     raise Exception("Dataset of Algorithm 2 doesn't have the required columns (gene_type, feature_selection, group_size)")
 
-    data_1 = data_1[data_1["libraries"] not in ["All", "DESeq2", "LimmaVoom", "EdgeR"]]
+    data_1 = data_1[~data_1["Library"].isin(["All", "DESeq2", "LimmaVoom", "EdgeR"])]
     data_1["Selection"] = data_1["gene_type"] + "-" + data_1["feature_selection"] + "-" + data_1["group_size"].astype(str) #  + "-" + data_2["libraries"]
     data_2["Selection"] = data_2["gene_type"] + "-" + data_2["feature_selection"] + "-" + data_2["group_size"].astype(str) #  + "-" + data_2["libraries"]
 
@@ -25,7 +30,11 @@ def combine_two_algo_data(path_1, path_2, name_1, name_2):
     intersect_ensembles = list()
     only_ensembles_1 = list()
     only_ensembles_2 = list()
+    intersect_gene_names = list()
+    only_gene_name_1 = list()
+    only_gene_name_2 = list()
 
+    rna_data = pd.read_excel("./DESeq2/All_GENES_DESeq2_RNA_SEQ.xlsx")
     # collect the data from the rows and put them into the correct lists
     for selection in data_1["Selection"].tolist():
         row_1 = data_1[data_1["Selection"] == selection]
@@ -38,9 +47,28 @@ def combine_two_algo_data(path_1, path_2, name_1, name_2):
         svm_ensembles.append(row_2["ensembles"].values[0])
         combined_accuracy_list.append((float(row_1["accuracy"].values[0])+float(row_2["accuracy"].values[0]))/2)
         combined_auc_list.append((float(row_1["auc"].values[0])+float(row_2["auc"].values[0]))/2)
-        intersect_ensembles.append(set(row_1["ensembles"].values[0].split(", ")) & set(row_2["ensembles"].values[0].split(", ")))
-        only_ensembles_1.append(set(row_1["ensembles"].values[0].split(", ")) - set(row_2["ensembles"].values[0].split(", ")))
-        only_ensembles_2.append(set(row_2["ensembles"].values[0].split(", ")) - set(row_1["ensembles"].values[0].split(", ")))
+        ensembles_intersect = set(row_1["ensembles"].values[0].split(", ")) & set(row_2["ensembles"].values[0].split(", "))
+        ensembles_only_1 = set(row_1["ensembles"].values[0].split(", ")) - set(row_2["ensembles"].values[0].split(", "))
+        ensembles_only_2 = set(row_2["ensembles"].values[0].split(", ")) - set(row_1["ensembles"].values[0].split(", "))
+        intersect_ensembles.append(ensembles_intersect)
+        only_ensembles_1.append(ensembles_only_1)
+        only_ensembles_2.append(ensembles_only_2)
+
+        intersect_genes = list()
+        for ensemble in list(ensembles_intersect):
+            intersect_genes.append(find_gene_name(ensemble, rna_data))
+
+        only_1_genes = list()
+        for ensemble_1 in list(ensembles_only_1):
+            only_1_genes.append(find_gene_name(ensemble_1, rna_data))
+
+        only_2_genes = list()
+        for ensemble_2 in list(ensembles_only_2):
+            only_2_genes.append(find_gene_name(ensemble_2, rna_data))
+
+        intersect_gene_names.append(intersect_genes)
+        only_gene_name_1.append(only_1_genes)
+        only_gene_name_2.append(only_2_genes)
 
     try:
         # create a dataset for the combined dataset, this contains all data and no calculation for averages
@@ -59,9 +87,10 @@ def combine_two_algo_data(path_1, path_2, name_1, name_2):
         # and their combined accuracy and auc
         combined_data = pd.DataFrame(
             zip(data_1["Selection"].tolist(), combined_accuracy_list, combined_auc_list, intersect_ensembles,
-                only_ensembles_1, only_ensembles_2),
+                only_ensembles_1, only_ensembles_2, intersect_gene_names, only_gene_name_1, only_gene_name_2),
             columns=["selection", "accuracy", "auc", "intersect ensembles", f"{name_1} ensembles",
-                     f"{name_2} ensembles"]
+                     f"{name_2} ensembles", "intersect gene names", f"{name_1} gene names", f"{name_2} gene names"
+            ]
         )
         combined_data.to_excel("calculated_combined_data.xlsx")
     except Exception as e:
@@ -88,14 +117,27 @@ def get_best_combined_intersects(combined_data, extra_genes=None):
     all_genes = list()
     for selection_option in set(list_selection_no_digits):
         selection_data = combined_data[combined_data["selection"] == selection_option]
+
         if selection_option.startswith("nc-"):
-            selection_data = selection_data[selection_data["amount_of_genes"].astype(int) <= 10]
+            print(selection_option)
+            print(selection_data.sort_values(by="auc", ascending=False).iloc[0]["amount_of_genes"])
             best_intersect = selection_data.sort_values(by="auc", ascending=False).iloc[0]["intersect ensembles"]
             best_intersect = best_intersect.replace("{", "").replace("}", "").replace("'", "").split(", ")
+            print(best_intersect)
             nc_genes.extend(best_intersect)
         elif selection_option.startswith("all-"):
+            print(selection_option)
+            print(selection_data.sort_values(by="auc", ascending=False).iloc[0]["amount_of_genes"])
             best_intersect = selection_data.sort_values(by="auc", ascending=False).iloc[0]["intersect ensembles"]
             best_intersect = best_intersect.replace("{", "").replace("}", "").replace("'", "").split(", ")
+            print(best_intersect)
+            all_genes.extend(best_intersect)
+        elif selection_option.startswith("coding-"):
+            print(selection_option)
+            print(selection_data.sort_values(by="auc", ascending=False).iloc[0]["amount_of_genes"])
+            best_intersect = selection_data.sort_values(by="auc", ascending=False).iloc[0]["intersect ensembles"]
+            best_intersect = best_intersect.replace("{", "").replace("}", "").replace("'", "").split(", ")
+            print(best_intersect)
             all_genes.extend(best_intersect)
         else:
             raise Exception("Selection doesn't start with all or nc")
@@ -112,19 +154,23 @@ def get_best_combined_intersects(combined_data, extra_genes=None):
     print(list(set(nc_genes+all_genes)))
 
     # create excelsheet for each library
-    create_excelsheet("./DESeq2/All_GENES_DESeq2_RNA_SEQ.csv", "./deseq2_all_results.xlsx", all_genes)
-    create_excelsheet("./LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.csv", "./limma_all_results.xlsx", all_genes)
-    create_excelsheet("./EdgeR/All_GENES_EdgeR_RNA_SEQ.csv", "./edger_all_results.xlsx", all_genes)
-    create_excelsheet("./DESeq2/NON_CODING_DESeq2_RNA_SEQ.csv", "./deseq2_nc_results.xlsx", nc_genes)
-    create_excelsheet("./LimmaVoom/NON_CODING_LimmaVoom_RNA_SEQ.csv", "./limma_nc_results.xlsx", nc_genes)
-    create_excelsheet("./EdgeR/NON_CODING_EdgeR_RNA_SEQ.csv", "./edger_nc_results.xlsx", nc_genes)
+    # create_excelsheet("./DESeq2/All_GENES_DESeq2_RNA_SEQ.csv", "./deseq2_all_results.xlsx", list(set(nc_genes+all_genes)))
+    # create_excelsheet("./LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.csv", "./limma_all_results.xlsx", list(set(nc_genes+all_genes)))
+    # create_excelsheet("./EdgeR/All_GENES_EdgeR_RNA_SEQ.csv", "./edger_all_results.xlsx", list(set(nc_genes+all_genes)))
 
 
-data = pd.read_excel("./Current_Comparison_SVM_RF/combined_data.xlsx")
+combine_two_algo_data(
+    "./Current_Comparison_SVM_RF/rf_results_13_july.xlsx",
+    "./Current_Comparison_SVM_RF/svm_results_13_july.xlsx",
+    "Random Forest",
+    "Support Vector Machine"
+)
 
-#  UBC, TPGS1, C19orf60, MT-ND2
-genes_added = ["ENSG00000150991", "ENSG00000141933", "ENSG00000006015", "ENSG00000198763"]
-get_best_combined_intersects(data, genes_added)
+# data = pd.read_excel("./Current_Comparison_SVM_RF/calculated_combined_data.xlsx")
+#
+# #  UBC, TPGS1, C19orf60, MT-ND2
+# genes_added = ["ENSG00000150991", "ENSG00000141933", "ENSG00000006015", "ENSG00000198763"]
+# get_best_combined_intersects(data, genes_added)
 
 
 
