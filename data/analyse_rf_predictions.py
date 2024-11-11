@@ -27,15 +27,19 @@ for analysis_type in ["All_GENES", "CODING","NON_CODING"]:
                 auc_average_list.append(auc_score/len(row["results"].keys()))
                 library_list.append(key)
                 feature_type_list.append(feature_type)
+
                 number_of_genes.append(gene_amount)
+                # add one more to the gene count, which resets on new combination
                 gene_amount += 1
+
+
 
 # create one final dataframe from all data
 result_df = pd.DataFrame({
     "Analysis type": analysis_type_list,
     "Library": library_list,
     "Number of genes": number_of_genes,
-    "Feature Selection Method": feature_type_list,
+    "Feature Selection Method": feature_type_list, 
     "Average accuracy": accuracy_average_list,
     "Average AUC score": auc_average_list,
     "Ensemble Ids": ensemble_list,

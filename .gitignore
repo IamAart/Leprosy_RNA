@@ -2,3 +2,4 @@
 TODO.txt
 /data_old_before_from_all_genes/
 .idea
+*/__pycache__

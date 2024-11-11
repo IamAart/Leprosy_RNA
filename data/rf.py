@@ -170,7 +170,7 @@ def perform_random_forest(selectors, x, y, iterations, gene_names, picture_path)
             plot_data[i] = {"fpr": fpr, "tpr": tpr, "auc": auc_score}
 
             # Save data in dict
-            selector_dict[i] = {"accuracy": accuracy, "roc_auc": auc_score}
+            selector_dict[i] = {"accuracy": accuracy, "roc_auc": auc_score.item()}
 
         # Save figure with AUC plot
         path = f"{picture_path}/{idx + MIN}.png"
@@ -203,6 +203,10 @@ if __name__ == "__main__":
         # Can switch below for OWN GENES
         for option, genes in all_genes.items():
             print(option)
+
+            if x_dataset is None or y_dataset is None:
+                raise Exception("Training data is not correct")
+            
             # find_best_parameters(x_dataset, y_dataset, genes) # Only used to find parameters once
             for model in ["RFE", "chi2"]:
                     dir_path = f"./Predictions/{method}/{option}/{model}/Pictures"

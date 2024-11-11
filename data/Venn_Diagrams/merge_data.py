@@ -50,19 +50,31 @@ def merge_data(data_deseq, data_limma, data_edger, biotype):
     set_limma2_ens, set_limma2_gene = sort_on_p_adj_val(set(set_limma) - set(set_edger) - set(set_deseq), [data_limma], "LimmaVoom")
     set_edger2_ens, set_edger2_gene = sort_on_p_adj_val(set(set_edger) - set(set_limma) - set(set_deseq), [data_edger], "EdgeR")
 
+    ensemble_lists = [set_all_3_ens, set_deseq_edger_ens, set_deseq_limma_ens, set_limma_edger_ens, set_deseq2_ens, set_limma2_ens, set_edger2_ens]
+    genes_lists = [set_all_3_gene, set_deseq_edger_gene, set_deseq_limma_gene, set_limma_edger_gene, set_deseq2_gene, set_limma2_gene, set_edger2_gene]
+
     # create combined dataframe
     merged_dataset_ens = pd.concat(
-        [set_all_3_ens, set_deseq_edger_ens, set_deseq_limma_ens, set_limma_edger_ens, set_deseq2_ens, set_limma2_ens, set_edger2_ens],
+        ensemble_lists,
         axis=1
     )
-    # create the files from pd
+
+    merged_dataset_genes = pd.concat(
+        genes_lists,
+        axis=1
+    )
+
     merged_dataset_ens.to_csv(f"ENSEMBLE_{biotype}_VENN_DATA.csv", index=False)
     with pd.ExcelWriter(f"ENSEMBLE_{biotype}_VENN_DATA.xlsx") as writer:
         merged_dataset_ens.to_excel(writer, index=False)
 
+    merged_dataset_genes.to_csv(f"GENES_{biotype}_VENN_DATA.csv", index=False)
+    with pd.ExcelWriter(f"GENES_{biotype}_VENN_DATA.xlsx") as writer:
+        merged_dataset_genes.to_excel(writer, index=False)
+
 COLUMN_NAME = "Row.names"
-NON_CODING_BIOTYPES = ["unitary_pseudogene", "unprocessed_pseudogene", "processed_pseudogene", "transcribed_unprocessed_pseudogene", "antisense", "transcribed_unitary_pseudogene", "polymorphic_pseudogene", "lincRNA", "sense_intronic", "transcribed_processed_pseudogene", "sense_overlapping", "IG_V_pseudogene", "pseudogene", "3prime_overlapping_ncRNA", "bidirectional_promoter_lncRNA", "snRNA", "miRNA", "misc_RNA", "snoRNA", "rRNA", "Mt_tRNA", "Mt_rRNA", "TR_V_pseudogene", "TR_J_pseudogene", "IG_D_gene", "IG_C_pseudogene", "IG_J_pseudogene", "scRNA", "scaRNA", "vaultRNA", "sRNA", "macro_lncRNA", "non_coding", "IG_pseudogene"]
-CODING_BIOTYPES = ["protein_coding", "processed_transcript", "TR_V_gene", "IG_V_gene", "IG_C_gene", "IG_J_gene", "TR_J_gene", "TR_C_gene", "ribozyme", "TR_D_gene", "TEC"]
+NON_CODING_BIOTYPES = ["processed_transcript", "ribozyme", "unitary_pseudogene", "unprocessed_pseudogene", "processed_pseudogene", "transcribed_unprocessed_pseudogene", "antisense", "transcribed_unitary_pseudogene", "polymorphic_pseudogene", "lincRNA", "sense_intronic", "transcribed_processed_pseudogene", "sense_overlapping", "IG_V_pseudogene", "pseudogene", "3prime_overlapping_ncRNA", "bidirectional_promoter_lncRNA", "snRNA", "miRNA", "misc_RNA", "snoRNA", "rRNA", "Mt_tRNA", "Mt_rRNA", "TR_V_pseudogene", "TR_J_pseudogene", "IG_C_pseudogene", "IG_J_pseudogene", "scRNA", "scaRNA", "vaultRNA", "sRNA", "macro_lncRNA", "non_coding", "IG_pseudogene"]
+CODING_BIOTYPES = ["IG_D_gene", "protein_coding", "TR_V_gene", "IG_V_gene", "IG_C_gene", "IG_J_gene", "TR_J_gene", "TR_C_gene", "TR_D_gene", "TEC"]
 
 deseq = pd.read_csv(f"../DESeq2/All_GENES_DESeq2_RNA_SEQ.csv", index_col=1)
 limma = pd.read_csv(f"../LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.csv", index_col=1)

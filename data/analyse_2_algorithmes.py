@@ -8,6 +8,7 @@ def find_gene_name(ensemble, data):
 
 def combine_two_algo_data(path_1, path_2, name_1, name_2):
     data_1 = pd.read_excel(path_1)
+    print(data_1.columns)
     data_2 = pd.read_excel(path_2)
     # if not ({"gene_type", "feature_selection", "group_size"}.issubset(set(data_1.columns))):
     #     raise Exception("Dataset of Algorithm 1 doesn't have the required columns (gene_type, feature_selection, group_size)")
@@ -154,23 +155,23 @@ def get_best_combined_intersects(combined_data, extra_genes=None):
     print(list(set(nc_genes+all_genes)))
 
     # create excelsheet for each library
-    # create_excelsheet("./DESeq2/All_GENES_DESeq2_RNA_SEQ.csv", "./deseq2_all_results.xlsx", list(set(nc_genes+all_genes)))
-    # create_excelsheet("./LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.csv", "./limma_all_results.xlsx", list(set(nc_genes+all_genes)))
-    # create_excelsheet("./EdgeR/All_GENES_EdgeR_RNA_SEQ.csv", "./edger_all_results.xlsx", list(set(nc_genes+all_genes)))
+    create_excelsheet("./DESeq2/All_GENES_DESeq2_RNA_SEQ.csv", "./deseq2_all_results.xlsx", list(set(nc_genes+all_genes)))
+    create_excelsheet("./LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.csv", "./limma_all_results.xlsx", list(set(nc_genes+all_genes)))
+    create_excelsheet("./EdgeR/All_GENES_EdgeR_RNA_SEQ.csv", "./edger_all_results.xlsx", list(set(nc_genes+all_genes)))
 
 
-combine_two_algo_data(
-    "./Current_Comparison_SVM_RF/rf_results_13_july.xlsx",
-    "./Current_Comparison_SVM_RF/svm_results_13_july.xlsx",
-    "Random Forest",
-    "Support Vector Machine"
-)
+# combine_two_algo_data(
+#     "./Current_Comparison_SVM_RF/rf_analysis_9_22.xlsx",
+#     "./Current_Comparison_SVM_RF/svm_analysis_9_22.xlsx",
+#     "Random Forest",
+#     "Support Vector Machine"
+# )
 
-# data = pd.read_excel("./Current_Comparison_SVM_RF/calculated_combined_data.xlsx")
-#
-# #  UBC, TPGS1, C19orf60, MT-ND2
-# genes_added = ["ENSG00000150991", "ENSG00000141933", "ENSG00000006015", "ENSG00000198763"]
-# get_best_combined_intersects(data, genes_added)
+data = pd.read_excel("./Current_Comparison_SVM_RF/calculated_combined_data.xlsx")
+
+#  UBC, TPGS1, C19orf60, MT-ND2
+genes_added = ["ENSG00000150991", "ENSG00000141933", "ENSG00000006015", "ENSG00000198763"]
+get_best_combined_intersects(data, genes_added)
 
 
 
