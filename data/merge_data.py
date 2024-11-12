@@ -64,21 +64,21 @@ def merge_data(data_deseq, data_limma, data_edger, biotype):
         axis=1
     )
 
-    merged_dataset_ens.to_csv(f"ENSEMBLE_{biotype}_VENN_DATA.csv", index=False)
-    with pd.ExcelWriter(f"ENSEMBLE_{biotype}_VENN_DATA.xlsx") as writer:
+    merged_dataset_ens.to_csv(f"./Venn_Diagrams/Ensemble_data/ENSEMBLE_{biotype}_VENN_DATA.csv", index=False)
+    with pd.ExcelWriter(f"./Venn_Diagrams/Ensemble_data/ENSEMBLE_{biotype}_VENN_DATA.xlsx") as writer:
         merged_dataset_ens.to_excel(writer, index=False)
 
-    merged_dataset_genes.to_csv(f"GENES_{biotype}_VENN_DATA.csv", index=False)
-    with pd.ExcelWriter(f"GENES_{biotype}_VENN_DATA.xlsx") as writer:
+    merged_dataset_genes.to_csv(f"./Venn_Diagrams/Gene_name_data/GENES_{biotype}_VENN_DATA.csv", index=False)
+    with pd.ExcelWriter(f"./Venn_Diagrams/Gene_name_data/GENES_{biotype}_VENN_DATA.xlsx") as writer:
         merged_dataset_genes.to_excel(writer, index=False)
 
 COLUMN_NAME = "Row.names"
 NON_CODING_BIOTYPES = ["processed_transcript", "ribozyme", "unitary_pseudogene", "unprocessed_pseudogene", "processed_pseudogene", "transcribed_unprocessed_pseudogene", "antisense", "transcribed_unitary_pseudogene", "polymorphic_pseudogene", "lincRNA", "sense_intronic", "transcribed_processed_pseudogene", "sense_overlapping", "IG_V_pseudogene", "pseudogene", "3prime_overlapping_ncRNA", "bidirectional_promoter_lncRNA", "snRNA", "miRNA", "misc_RNA", "snoRNA", "rRNA", "Mt_tRNA", "Mt_rRNA", "TR_V_pseudogene", "TR_J_pseudogene", "IG_C_pseudogene", "IG_J_pseudogene", "scRNA", "scaRNA", "vaultRNA", "sRNA", "macro_lncRNA", "non_coding", "IG_pseudogene"]
 CODING_BIOTYPES = ["IG_D_gene", "protein_coding", "TR_V_gene", "IG_V_gene", "IG_C_gene", "IG_J_gene", "TR_J_gene", "TR_C_gene", "TR_D_gene", "TEC"]
 
-deseq = pd.read_csv(f"../DESeq2/All_GENES_DESeq2_RNA_SEQ.csv", index_col=1)
-limma = pd.read_csv(f"../LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.csv", index_col=1)
-edger = pd.read_csv(f"../EdgeR/All_GENES_EdgeR_RNA_SEQ.csv", index_col=1)
+deseq = pd.read_csv(f"./DESeq2/All_GENES_DESeq2_RNA_SEQ.csv", index_col=1)
+limma = pd.read_csv(f"./LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.csv", index_col=1)
+edger = pd.read_csv(f"./EdgeR/All_GENES_EdgeR_RNA_SEQ.csv", index_col=1)
 
 for biotype, selection in {"NON_CODING": NON_CODING_BIOTYPES, "CODING": CODING_BIOTYPES, "All_GENES": None}.items():
     deseq_selection = dataset_with_selection(deseq, selection)
