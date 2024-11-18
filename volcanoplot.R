@@ -32,6 +32,41 @@ VolcanoPlot <- function( d, top_20 ) {
     return(p)
 }
 
+VolcanoPlot_Final_Results <- function( data, log2_off, cut_off, coding, non_coding ) {
+    first <- c("ENSG00000204387", "ENSG00000233493", "ENSG00000203875", "ENSG00000269893", "ENSG00000274012")
+    second <- c("ENSG00000177469", "ENSG00000179085", "ENSG00000215414", "ENSG00000225864", "ENSG00000226287", "ENSG00000236552", "ENSG00000255559", "ENSG00000258920", "ENSG00000272906", "ENSG00000278771")
+    
+    d <- data %>%
+          mutate( Colorcode = case_when(
+              Row.names %in% c(first, second) & Log2FoldChange >= log2_off & P.Adjust <= cut_off & biotype %in% coding ~ "up_c" ,
+              Row.names %in% c(first, second) & Log2FoldChange <= -log2_off & P.Adjust <= cut_off & biotype %in% coding ~ "down_c",
+              Row.names %in% c(first, second) & Log2FoldChange >= log2_off & P.Adjust <= cut_off & biotype %in% non_coding ~ "up_nc" ,
+              Row.names %in% c(first, second) & Log2FoldChange <= -log2_off & P.Adjust <= cut_off & biotype %in% non_coding ~ "down_nc",
+              TRUE ~ "not"
+          ) )
+    text_repel_1 <- d[d$Row.names %in% c(first), ]
+    text_repel_2 <- d[d$Row.names %in% c(second), ]
+    p <- ggplot(data = d, aes( x = Log2FoldChange, y = -log10( P.Adjust ), color = Colorcode, label = gene_name) ) +
+      geom_hline(yintercept = -log10(CUT_OFF), linetype = "dashed", colour="darkgray", alpha=0.75) +
+      geom_vline(xintercept = c(-LOG2_OFF, LOG2_OFF), linetype = "dashed", colour="darkgray", alpha=0.75) +
+      geom_point() +
+      geom_text_repel(data = text_repel_1, size=3, colour="purple") +
+      geom_text_repel(data = text_repel_2, size=3, colour="darkgreen") +
+      labs(x = "Log2 (Fold Change)", y="Adjusted P-Value") +
+      scale_color_manual(
+        values = c( up_c = "#ff7f0e", down_c = "blue", up_nc = "#e31a1c", down_nc = "darkgreen", not = "gray" ),
+        labels = c(up_c = "Up-regulated coding genes", down_c = "Down-regulated coding genes", up_nc = "Up-regulated non-coding genes", down_nc = "Down-regulated non-coding genes", not = "Not differentially expressed genes" )
+      ) +
+      scale_y_continuous(breaks = c(0, -log10(CUT_OFF), 2.00, 3.00, 4.00),
+                         labels = c(1, 0.05, 0.01, 0.001, 0.0001)) +
+      scale_x_continuous(breaks = c(-3, -2, -1, -LOG2_OFF, 0, LOG2_OFF, 1, 2, 3),
+                         limits = c(-3, 3),
+                         labels = c(-3, -2, -1, "-Log2(1.5)", 0 , "Log2(1.5)", 1, 2, 3)) +
+      guides(color=guide_legend("Gene Information")) +
+      theme(legend.position = "right")
+    return(p)
+}
+
 get_subset_genes_all <- function(path) {
   data <- read_excel(path)["ensembles"]
   total_list = c()
@@ -127,4 +162,8 @@ plot_names <- list(
 )
 
 subset_genes <- NULL # "Best"  # "All" NULL "Best_of_Three"
-run_volcanoplot(paths, CUT_OFF, LOG2_OFF, NON_CODING_BIOTYPES, CODING_BIOTYPES, plot_names, subset_genes)
+# run_volcanoplot(paths, CUT_OFF, LOG2_OFF, NON_CODING_BIOTYPES, CODING_BIOTYPES, plot_names, subset_genes)
+
+
+ggplot_build(VolcanoPlot_Final_Results(read_excel("./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"), LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES))
+ggsave(paste0("./data/VolcanoPlots/Final_RF.png"), VolcanoPlot_Final_Results(read_excel("./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"), LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES), width=15, height=10, dpi=300)
