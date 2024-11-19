@@ -72,6 +72,7 @@ make_boxplot_gene_expression <- function() {
     data_hhc_t1 <- normalized_counts[genes, ]
     data_hhc_t1 <- subset(data_hhc_t1, select=hhc_t1$sample)
     data_hhc_t1 <- data.frame(GeneName = gene_names, data_hhc_t1)
+    data_hhc_t1 <- data_hhc_t1 %>% select(-c("s103830.003.011", "s103830.004.017"))
 
     melted_data <- reshape2::melt(data_hhc_t1)
     colnames(melted_data) <- c("GeneName", "SampleID", "CPM")
@@ -95,10 +96,10 @@ make_boxplot_gene_expression <- function() {
     ggsave("./data/RF_analysis_plots/boxplot_final_result.png", plot, width=12, height=6, dpi=720) 
 }
 
-data <- read_excel("./data/Current_Comparison_SVM_RF/rf_analysis_9_22.xlsx")
-rfe_vs_chi2_plot(data)
-type_comparison_plot(data)
-# box_plot_libraries(data, "all")
-# box_plot_libraries(data, "coding")
-box_plot_libraries(data, "nc")
+# data <- read_excel("./data/Current_Comparison_SVM_RF/rf_analysis_9_22.xlsx")
+# rfe_vs_chi2_plot(data)
+# type_comparison_plot(data)
+# # box_plot_libraries(data, "all")
+# # box_plot_libraries(data, "coding")
+# box_plot_libraries(data, "nc")
 make_boxplot_gene_expression()
