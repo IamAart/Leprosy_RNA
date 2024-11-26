@@ -4,34 +4,37 @@ library("ggplot2")
 library("ggrepel")
 library("viridis")
 library("edgeR")
+library("ggpubr")
 
 rfe_vs_chi2_plot <- function(data) {
     data$feature_selection <- as.factor(data$feature_selection)
-    plot <- ggplot(data) +
-        geom_boxplot(aes(x=feature_selection, y=auc, color=feature_selection)) +
+    plot <- ggplot(data, aes(x=feature_selection, y=auc, color=feature_selection)) +
+        geom_boxplot() +
         labs(title = "Difference in auc score between feature selection methods; RFE and Chi2", x = "Feature Selection Method", y = "Auc Score", color="Feature Selection Method") + 
         scale_color_viridis(
             discrete = TRUE,
             labels = c(rfe = "Recursive Feature Elimination", chi2 = "Chi-squared Feature Elimination")
         ) +
-        theme(legend.position = "right")
+        theme(legend.position = "right") +
+        stat_compare_means(comparisons = list(c("chi2", "rfe")))
     
-    ggsave("./data/RF_analysis_plots/boxplot_rfe_vs_chi2.png", plot, width=7, height=7, dpi=490)
+    ggsave("./data/RF_analysis_plots/boxplot_rfe_vs_chi2_mann_whitney.png", plot, width=7, height=7, dpi=490)
 }
 
 type_comparison_plot <- function(data) {
     data <- data[data$feature_selection == "rfe", ]
     data$gene_type[data$gene_type == "nc"] <- "non_coding" 
-    plot <- ggplot(data) +
-        geom_boxplot(aes(x=gene_type, y=auc, color=gene_type)) +
+    plot <- ggplot(data, aes(x=gene_type, y=auc, color=gene_type)) +
+        geom_boxplot() +
         labs(title = "Difference in auc score between different biotypes", x = "Biotype", y = "Auc Score", color="Biotype Information") + 
         scale_color_viridis(
             discrete = TRUE,
             labels = c(all = "All Genes", coding = "Coding genes", non_coding = "Non-coding genes")
         ) +
-        theme(legend.position = "right")
+        theme(legend.position = "right") + 
+        stat_compare_means(comparisons = list(c("all", "coding"), c("coding", "non_coding"), c("all", "non_coding")))
     
-    ggsave("./data//RF_analysis_plots/boxplot_non_coding_vs_coding.png", plot, width=7, height=7, dpi=490) 
+    ggsave("./data//RF_analysis_plots/boxplot_non_coding_vs_coding_mann_whitney.png", plot, width=7, height=7, dpi=490) 
 }
 
 box_plot_libraries <- function(data, biotype) {
@@ -40,16 +43,25 @@ box_plot_libraries <- function(data, biotype) {
     if (biotype == "nc") {
         data$gene_type[data$gene_type == "nc"] <- "non_coding" 
     }
-    plot <- ggplot(data) +
-        geom_boxplot(aes(x=Library, y=auc, color=Library)) +
+    plot <- ggplot(data, aes(x=Library, y=auc, color=Library)) +
+        geom_boxplot() +
         labs(title = "Difference in auc score between RNA sequencing methods for non-coding genes" , x = "RNA Sequencing Method", y = "Auc Score", color="RNA Sequencing Method") + 
         scale_color_viridis(
             discrete = TRUE,
             labels = c("All" = "genes from the union of all libraries", "DESeq2" = "DESeq2 genes", "EdgeR" = "EdgeR genes", "LimmaVoom" = "LimmaVoom genes", "Only combined libraries" = "genes from the intersect of all libraries")
         ) +
-        theme(legend.position = "right", plot.title = element_text(hjust = 0.5))
+        theme(legend.position = "right", plot.title = element_text(hjust = 0.5)) + 
+        stat_compare_means(
+            comparisons = list(
+                c("All", "DESeq2"), c("All", "EdgeR"), c("All", "LimmaVoom"), c("All", "Only combined libraries"),
+                c("DESeq2", "EdgeR"), c("DESeq2", "LimmaVoom"), c("DESeq2", "Only combined libraries"),
+                c("EdgeR", "LimmaVoom"), c("EdgeR", "Only combined libraries"),
+                c("LimmaVoom", "Only combined libraries")
+            )
+            # method = "t.test"
+        )
     
-    ggsave("./data/RF_analysis_plots/boxplot_libraries_non_coding_genes.png", plot, width=12, height=6, dpi=720) 
+    ggsave("./data/RF_analysis_plots/boxplot_libraries_non_coding_genes_wilcox_mann_whitney.png", plot, width=12, height=6, dpi=720) 
 }
 
 make_boxplot_gene_expression <- function() {
@@ -61,8 +73,10 @@ make_boxplot_gene_expression <- function() {
     normfactors <-  calcNormFactors(dge, method= "TMM")
     normalized_counts <- cpm(normfactors, log=TRUE)
 
-    genes <- c("ENSG00000204387", "ENSG00000233493", "ENSG00000179085", "ENSG00000236552", "ENSG00000225864", "ENSG00000272906", "ENSG00000269893", "ENSG00000226287", "ENSG00000203875", "ENSG00000274012", "ENSG00000278771", "ENSG00000255559", "ENSG00000258920", "ENSG00000215414", "ENSG00000177469")
-    gene_names <- c("SNHG32 or C6orf48", "TMEM238", "DPM3", "RPL13AP5", "HCG4P11", "RP11-533E19.7", "SNHG8", "TMEM191A", "SNHG5", "RN7SL2", "Metazoa SRP", "ZNF252P-AS1", "FOXN3-AS1", "PSMA6P1", "PTRF")
+    # genes <- c("ENSG00000204387", "ENSG00000233493", "ENSG00000179085", "ENSG00000236552", "ENSG00000225864", "ENSG00000272906", "ENSG00000269893", "ENSG00000226287", "ENSG00000203875", "ENSG00000274012", "ENSG00000278771", "ENSG00000255559", "ENSG00000258920", "ENSG00000215414", "ENSG00000177469")
+    # gene_names <- c("SNHG32 or C6orf48", "TMEM238", "DPM3", "RPL13AP5", "HCG4P11", "RP11-533E19.7", "SNHG8", "TMEM191A", "SNHG5", "RN7SL2", "Metazoa SRP", "ZNF252P-AS1", "FOXN3-AS1", "PSMA6P1", "PTRF")
+    genes <- c('ENSG00000203875', 'ENSG00000269893', 'ENSG00000274012', 'ENSG00000236552', 'ENSG00000255559', 'ENSG00000258920', 'ENSG00000278771', 'ENSG00000226287', 'ENSG00000272906', 'ENSG00000225864', 'ENSG00000204387', 'ENSG00000233493', 'ENSG00000215414', 'ENSG00000224066', 'ENSG00000230979', 'ENSG00000179085', 'ENSG00000215908', 'ENSG00000272277', 'ENSG00000234741', 'ENSG00000177469', 'ENSG00000226085', 'ENSG00000141933')
+    gene_names <- c('SNHG5', 'SNHG8', 'RN7SL2', 'RPL13AP5', 'ZNF252P-AS1', 'FOXN3-AS1', 'Metazoa_SRP', 'TMEM191A', 'RP11-533E19.7', 'HCG4P11', 'SNHG32 or C6orf48', 'TMEM238', 'PSMA6P1', 'RP4-622L5.7', 'AC079250.1', 'DPM3', 'CROCCP2', 'RP1-40E16.12', 'GAS5', 'PTRF', 'UQCRFS1P1', 'TPGS1')
 
     hhc_t1 <- samples[samples$group %in% c("HHC", "First"), ][, c("sample", "group")]
     hhc <- hhc_t1[hhc_t1$group == "HHC", ]$sample
@@ -93,10 +107,12 @@ make_boxplot_gene_expression <- function() {
             theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
             
 
-    ggsave("./data/RF_analysis_plots/boxplot_final_result.png", plot, width=12, height=6, dpi=720) 
+    ggsave("./data/RF_analysis_plots/boxplot_final_result_2.png", plot, width=12, height=6, dpi=720) 
 }
 
-# data <- read_excel("./data/Current_Comparison_SVM_RF/rf_analysis_9_22.xlsx")
+data <- read_excel("./data/Current_Comparison_SVM_RF/rf_analysis_9_22.xlsx")
+
+
 # rfe_vs_chi2_plot(data)
 # type_comparison_plot(data)
 # # box_plot_libraries(data, "all")
