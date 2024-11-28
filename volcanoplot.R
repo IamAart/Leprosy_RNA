@@ -5,6 +5,7 @@ library("ggrepel")
 library("reshape2")
 library("stringr")
 
+colors = c("#88ccee", "#44aa99", "#117733", "#332288", "#ddcc77", "#999933", "#cc6677", "#882255", "#aa4499", "#dddddd")
 
 
 VolcanoPlot <- function( d, top_20 ) {
@@ -13,22 +14,35 @@ VolcanoPlot <- function( d, top_20 ) {
       text_repel <- head(text_repel, 20)
     }
     p <- ggplot(data = d, aes( x = Log2FoldChange, y = -log10( P.Adjust ), color = Colorcode, label = gene_name) ) +
+      theme_minimal() +
       geom_hline(yintercept = -log10(CUT_OFF), linetype = "dashed", colour="darkgray", alpha=0.75) +
       geom_vline(xintercept = c(-LOG2_OFF, LOG2_OFF), linetype = "dashed", colour="darkgray", alpha=0.75) +
       geom_point() +
-      geom_text_repel(data = text_repel, size=3) +
-      labs(title = "Volcano plot different expressed genes", x = "Log2 (Fold Change)", y="Adjusted P-Value") +
+      geom_text_repel(data = text_repel, size=4.4) +
+      labs(x = "Log2 Fold Change", y="-Log10(P-Adjust value)") +
       scale_color_manual(
-        values = c( up_c = "#ff7f0e", down_c = "blue", up_nc = "#e31a1c", down_nc = "darkgreen", not = "gray" ),
-        labels = c(up_c = "Up-regulated coding genes", down_c = "Down-regulated coding genes", up_nc = "Up-regulated non-coding genes", down_nc = "Down-regulated non-coding genes", not = "Not differentially expressed genes" )
+        values = c( up_c = colors[3], down_c = colors[4], up_nc = colors[8], down_nc = colors[6], not = colors[10]),
+        labels = c(up_c = "UP - CODING", down_c = "DOWN - CODING", up_nc = "UP - NC", down_nc = "DOWN - NC", not = "Stable state" )
       ) +
       scale_y_continuous(breaks = c(0, -log10(CUT_OFF), 2.00, 3.00, 4.00),
-                         labels = c(1, 0.05, 0.01, 0.001, 0.0001)) +
+                         labels = c(0, round(-log10(CUT_OFF), digits = 2), 2, 3, 4)) +
       scale_x_continuous(breaks = c(-3, -2, -1, -LOG2_OFF, 0, LOG2_OFF, 1, 2, 3),
                          limits = c(-3, 3),
                          labels = c(-3, -2, -1, "-Log2(1.5)", 0 , "Log2(1.5)", 1, 2, 3)) +
-      guides(color=guide_legend("Gene Information")) +
-      theme(legend.position = "right")
+      guides(color=guide_legend("Regulatory State")) +
+      theme(
+        # Axis titles font size
+        axis.title.x = element_text(size = 19),    # x-axis label size
+        axis.title.y = element_text(size = 19),    # y-axis label size
+        
+        # Axis tick labels font size
+        axis.text.x = element_text(size = 17),     # x-axis ticks (labels) size
+        axis.text.y = element_text(size = 17),     # y-axis ticks (labels) size
+        
+        # Legend title and text font size
+        legend.title = element_text(size = 17),    # Legend title size
+        legend.text = element_text(size = 16)      # Legend labels size
+      )
     return(p)
 }
 
@@ -48,19 +62,31 @@ VolcanoPlot_Final_Results <- function( data, log2_off, cut_off, coding, non_codi
       geom_hline(yintercept = -log10(CUT_OFF), linetype = "dashed", colour="darkgray", alpha=0.75) +
       geom_vline(xintercept = c(-LOG2_OFF, LOG2_OFF), linetype = "dashed", colour="darkgray", alpha=0.75) +
       geom_point() +
-      geom_text_repel(data = text_repel_1, size=3, colour="black") +
-      labs(x = "Log2 (Fold Change)", y="Adjusted P-Value") +
+      geom_text_repel(data = text_repel_1, size=4.4) +
+      labs(x = "Log2 Fold Change", y="-Log10(P-Adjust value)") +
       scale_color_manual(
-        values = c( up_c = "#ff7f0e", down_c = "blue", up_nc = "#e31a1c", down_nc = "darkgreen", not = "gray" ),
-        labels = c(up_c = "Up-regulated coding genes", down_c = "Down-regulated coding genes", up_nc = "Up-regulated non-coding genes", down_nc = "Down-regulated non-coding genes", not = "Not differentially expressed genes" )
+        values = c( up_c = colors[3], down_c = colors[4], up_nc = colors[8], down_nc = colors[6], not = colors[10]),
+        labels = c(up_c = "UP - CODING", down_c = "DOWN - CODING", up_nc = "UP - NC", down_nc = "DOWN - NC", not = "Stable state" )
       ) +
       scale_y_continuous(breaks = c(0, -log10(CUT_OFF), 2.00, 3.00, 4.00),
-                         labels = c(1, 0.05, 0.01, 0.001, 0.0001)) +
+                         labels = c(0, round(-log10(CUT_OFF), digits = 2), 2, 3, 4)) +
       scale_x_continuous(breaks = c(-3, -2, -1, -LOG2_OFF, 0, LOG2_OFF, 1, 2, 3),
                          limits = c(-3, 3),
                          labels = c(-3, -2, -1, "-Log2(1.5)", 0 , "Log2(1.5)", 1, 2, 3)) +
-      guides(color=guide_legend("Gene Information")) +
-      theme(legend.position = "right")
+      guides(color=guide_legend("Regulatory State")) +
+      theme(
+        # Axis titles font size
+        axis.title.x = element_text(size = 19),    # x-axis label size
+        axis.title.y = element_text(size = 19),    # y-axis label size
+        
+        # Axis tick labels font size
+        axis.text.x = element_text(size = 17),     # x-axis ticks (labels) size
+        axis.text.y = element_text(size = 17),     # y-axis ticks (labels) size
+        
+        # Legend title and text font size
+        legend.title = element_text(size = 17),    # Legend title size
+        legend.text = element_text(size = 16)      # Legend labels size
+      )
     return(p)
 }
 
@@ -137,7 +163,7 @@ run_volcanoplot <- function(data_path_list, cut_off, log2_off, non_coding, codin
     }
       
     ggplot_build(VolcanoPlot(result_data, FALSE))
-    ggsave(paste0("./data/VolcanoPlots/", plot_names[i], ".png"), VolcanoPlot(result_data, FALSE), width=15, height=10, dpi=300)
+    ggsave(paste0("./data/VolcanoPlots/", plot_names[i], ".png"), VolcanoPlot(result_data, FALSE), width=18, height=10, dpi=720)
   }
 }
 
@@ -159,8 +185,8 @@ plot_names <- list(
 )
 
 subset_genes <- NULL # "Best"  # "All" NULL "Best_of_Three"
-# run_volcanoplot(paths, CUT_OFF, LOG2_OFF, NON_CODING_BIOTYPES, CODING_BIOTYPES, plot_names, subset_genes)
+run_volcanoplot(paths, CUT_OFF, LOG2_OFF, NON_CODING_BIOTYPES, CODING_BIOTYPES, plot_names, subset_genes)
 
 
 ggplot_build(VolcanoPlot_Final_Results(read_excel("./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"), LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES))
-ggsave(paste0("./data/VolcanoPlots/Final_RF_2.png"), VolcanoPlot_Final_Results(read_excel("./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"), LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES), width=15, height=10, dpi=300)
+ggsave(paste0("./data/VolcanoPlots/Final_RF_volcanoplot.png"), VolcanoPlot_Final_Results(read_excel("./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"), LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES), width=18, height=10, dpi=720)
