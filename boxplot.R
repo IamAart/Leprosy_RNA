@@ -21,6 +21,11 @@ rfe_vs_chi2_plot <- function(data) {
         scale_x_discrete(
             labels = c("rfe" = "RFE", "chi2" = expression(chi^2))
         ) +
+        scale_y_continuous(
+            breaks = c(0.85, 0.9, 0.95, 1.0),
+            limits = c(0.85, 1.00),
+            labels = c("0.85", "0.90", "0.95", "1.00")
+        ) +
         theme(
             legend.position = "none",
             # Axis titles font size
@@ -45,7 +50,7 @@ type_comparison_plot <- function(data) {
     data$gene_type[data$gene_type == "nc"] <- "non_coding" 
     plot <- ggplot(data, aes(x=gene_type, y=auc, fill=gene_type)) +
         geom_boxplot() +
-        theme_minimal() +
+        
         labs(x = "Type of RNA", y = "Average Auc score", fill="Type of RNA") + 
         scale_fill_manual(
             values = c(all = colors[1], non_coding = colors[1], coding = colors[1]),
@@ -54,6 +59,7 @@ type_comparison_plot <- function(data) {
             limits = c("all", "non_coding", "coding"),
             labels = c("all" = "ALL", "non_coding" = "NC", "coding" = "CODING")
         ) +
+        theme_minimal() +
         theme(
             legend.position = "none",
             # Axis titles font size
@@ -74,19 +80,24 @@ type_comparison_plot <- function(data) {
 }
 
 box_plot_libraries <- function(data, biotype) {
-    data <- data[data$feature_selection == "rfe", ]
+    # data <- data[data$feature_selection == "rfe", ]
     data <- data[data["gene_type"] == biotype, ]
     if (biotype == "nc") {
         data$gene_type[data$gene_type == "nc"] <- "non_coding" 
     }
     plot <- ggplot(data, aes(x=Library, y=auc, fill=Library)) +
         geom_boxplot() +
+        theme_minimal() +
         labs(x = "DGE Analysis Method", y = "Average Auc score", fill="RNA Sequencing Method") + 
         scale_fill_manual(
             values = c("All" = colors[9], "DESeq2" = colors[9], "EdgeR" = colors[9], "LimmaVoom" = colors[9], "Only combined libraries" = colors[9]),
         ) +
         scale_x_discrete(
             labels = c("All" = "Union", "DESeq2" = "DESeq2", "EdgeR" = "EdgeR", "LimmaVoom" = "LimmaVoom", "Only combined libraries" = "Intersect")
+        ) +
+        scale_y_continuous(
+            breaks = c(0.85, 0.9, 0.95, 1.0),
+            labels = c("0.85", "0.90", "0.95", "1.00")
         ) +
         theme(
             legend.position = "none",
@@ -112,7 +123,7 @@ box_plot_libraries <- function(data, biotype) {
             # method = "t.test"
         )
     
-    ggsave("./data/RF_analysis_plots/boxplot_libraries_all_genes_wilcox_mann_whitney_with_only_rfe.png", plot, width=12, height=6, dpi=720) 
+    ggsave("./data/RF_analysis_plots/boxplot_libraries_non_coding_genes_wilcox_mann_whitney.png", plot, width=12, height=6, dpi=720) 
 }
 
 make_boxplot_gene_expression <- function() {
@@ -150,10 +161,15 @@ make_boxplot_gene_expression <- function() {
 
     plot <- ggplot(melted_data, aes(x = GeneName, y = CPM)) +
             geom_boxplot(aes(fill=factor(Condition, levels=c("HHC", "First"))), position = position_dodge(0.9)) +
+            theme_minimal() +
             scale_fill_manual(
                 values = c("HHC" = colors[7], "First" = colors[2]),
                 labels = c("HHC" = "Household Contacts", "First" = "Progressors without symptoms")
             ) +
+            scale_y_continuous(
+                breaks = c(-4, -2, 0, 2, 4, 8, 16),
+                labels = c("-2", "-1", "0", "1", "2", "3", "4")
+            ) + 
             labs(y = "CPM", x="Gene Names") +
             guides(fill=guide_legend("Condition")) +
             theme(

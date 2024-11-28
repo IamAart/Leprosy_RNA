@@ -2,6 +2,7 @@ library("writexl")
 library("dplyr")
 library("ggplot2")
 library("ggrepel")
+library("tibble")
 
 BIOTYPES <- c("unitary_pseudogene", "unprocessed_pseudogene", "processed_pseudogene", "transcribed_unprocessed_pseudogene", "antisense", "transcribed_unitary_pseudogene", "polymorphic_pseudogene", "lincRNA", "sense_intronic", "transcribed_processed_pseudogene", "sense_overlapping", "IG_V_pseudogene", "pseudogene", "3prime_overlapping_ncRNA", "bidirectional_promoter_lncRNA", "snRNA", "miRNA", "misc_RNA", "snoRNA", "rRNA", "Mt_tRNA", "Mt_rRNA", "TR_V_pseudogene", "TR_J_pseudogene", "IG_C_pseudogene", "IG_J_pseudogene", "scRNA", "scaRNA", "vaultRNA", "sRNA", "macro_lncRNA", "non_coding", "IG_pseudogene", "processed_transcript", "ribozyme")
 CODING_BIOTYPES <- c("IG_D_gene", "protein_coding", "TR_V_gene", "IG_V_gene", "IG_C_gene", "IG_J_gene", "TR_J_gene", "TR_C_gene", "TR_D_gene", "TEC")
@@ -70,7 +71,50 @@ normalization_edgeR <- function(counts, samples, design) {
     normalized_data <- normalized_data[keep, keep.lib.sizes = FALSE]
 
     normalized_data <- calcNormFactors(normalized_data, method = "TMM")
-    # plotMDS(normalized_data)
+    
+    # colors = c("#88ccee", "#44aa99", "#117733", "#332288", "#ddcc77", "#999933", "#cc6677", "#882255", "#aa4499", "#dddddd")
+
+    # plot <- plotMDS(normalized_data)
+    # plot <- as.data.frame(plot)
+    # plot_data <- plot[, c("x", "y")]
+    # plot_data["Row.names"] <- rownames(plot_data)
+    # samples["Row.names"] <- rownames(samples)
+
+    # hhc <- samples[samples$group == "HHC", ]$Row.names
+    # t1 <- samples[samples$group == "First", ]$Row.names
+    # data <- plot_data %>%
+    #     mutate( Colorcode = case_when(
+    #         Row.names %in% hhc ~ "HHC",
+    #         Row.names %in% t1 ~ "First",
+    #         TRUE ~ "Second"
+    #     ) )
+    # data$Colorcode <- factor(data$Colorcode, levels = c("HHC", "First", "Second"))
+
+    # text_repel <- data[data$x <= -1.25, ]
+    # p <- ggplot(data, aes(x=x, y=y, label = Row.names, color=Colorcode)) + 
+    #         geom_point() + 
+    #         geom_text_repel(data = text_repel, size=4.4) +
+    #         theme_minimal() +
+    #         labs(x = "Log2 Fold Change Dimension 1", y="Log 2 Fold Change Dimension 2") +
+    #         scale_color_manual(
+    #             values = c(HHC = colors[1], First = colors[4], Second = colors[7]),
+    #             labels = c(HHC = "Healthy", First = "Progressors without symptoms", Second = "Progressors with symptoms")
+    #         ) +
+    #         guides(color=guide_legend("Patient Information")) +
+    #         theme(
+    #             # Axis titles font size
+    #             axis.title.x = element_text(size = 19),    # x-axis label size
+    #             axis.title.y = element_text(size = 19),    # y-axis label size
+                
+    #             # Axis tick labels font size
+    #             axis.text.x = element_text(size = 17),     # x-axis ticks (labels) size
+    #             axis.text.y = element_text(size = 17),     # y-axis ticks (labels) size
+                
+    #             # Legend title and text font size
+    #             legend.title = element_text(size = 17),    # Legend title size
+    #             legend.text = element_text(size = 16)      # Legend labels size
+    #         ) 
+    # ggsave("./MDS_Plot.png", p, width=15, height=10, dpi=720)
     return(normalized_data)
 }
 

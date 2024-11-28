@@ -21,11 +21,11 @@ VolcanoPlot <- function( d, top_20 ) {
       geom_text_repel(data = text_repel, size=4.4) +
       labs(x = "Log2 Fold Change", y="-Log10(P-Adjust value)") +
       scale_color_manual(
-        values = c( up_c = colors[3], down_c = colors[4], up_nc = colors[8], down_nc = colors[6], not = colors[10]),
+        values = c( up_c = colors[8], down_c = colors[4], up_nc = colors[3], down_nc = colors[6], not = colors[10]),
         labels = c(up_c = "UP - CODING", down_c = "DOWN - CODING", up_nc = "UP - NC", down_nc = "DOWN - NC", not = "Stable state" )
       ) +
-      scale_y_continuous(breaks = c(0, -log10(CUT_OFF), 2.00, 3.00, 4.00),
-                         labels = c(0, round(-log10(CUT_OFF), digits = 2), 2, 3, 4)) +
+      scale_y_continuous(breaks = c(0, 1.00, -log10(CUT_OFF), 2.00, 3.00, 4.00),
+                         labels = c(0, 1.00, round(-log10(CUT_OFF), digits = 2), 2, 3, 4)) +
       scale_x_continuous(breaks = c(-3, -2, -1, -LOG2_OFF, 0, LOG2_OFF, 1, 2, 3),
                          limits = c(-3, 3),
                          labels = c(-3, -2, -1, "-Log2(1.5)", 0 , "Log2(1.5)", 1, 2, 3)) +
@@ -61,15 +61,16 @@ VolcanoPlot_Final_Results <- function( data, log2_off, cut_off, coding, non_codi
     p <- ggplot(data = d, aes( x = Log2FoldChange, y = -log10( P.Adjust ), color = Colorcode, label = gene_name) ) +
       geom_hline(yintercept = -log10(CUT_OFF), linetype = "dashed", colour="darkgray", alpha=0.75) +
       geom_vline(xintercept = c(-LOG2_OFF, LOG2_OFF), linetype = "dashed", colour="darkgray", alpha=0.75) +
+      theme_minimal() +
       geom_point() +
       geom_text_repel(data = text_repel_1, size=4.4) +
       labs(x = "Log2 Fold Change", y="-Log10(P-Adjust value)") +
       scale_color_manual(
-        values = c( up_c = colors[3], down_c = colors[4], up_nc = colors[8], down_nc = colors[6], not = colors[10]),
+        values = c( up_c = colors[8], down_c = colors[4], up_nc = colors[3], down_nc = colors[6], not = colors[10]),
         labels = c(up_c = "UP - CODING", down_c = "DOWN - CODING", up_nc = "UP - NC", down_nc = "DOWN - NC", not = "Stable state" )
       ) +
-      scale_y_continuous(breaks = c(0, -log10(CUT_OFF), 2.00, 3.00, 4.00),
-                         labels = c(0, round(-log10(CUT_OFF), digits = 2), 2, 3, 4)) +
+      scale_y_continuous(breaks = c(0, 1.00, -log10(CUT_OFF), 2.00, 3.00, 4.00),
+                         labels = c(0, 1.00, round(-log10(CUT_OFF), digits = 2), 2, 3, 4)) +
       scale_x_continuous(breaks = c(-3, -2, -1, -LOG2_OFF, 0, LOG2_OFF, 1, 2, 3),
                          limits = c(-3, 3),
                          labels = c(-3, -2, -1, "-Log2(1.5)", 0 , "Log2(1.5)", 1, 2, 3)) +
