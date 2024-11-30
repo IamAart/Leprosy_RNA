@@ -92,13 +92,13 @@ normalization_edgeR <- function(counts, samples, design) {
 
     # text_repel <- data[data$x <= -1.25, ]
     # p <- ggplot(data, aes(x=x, y=y, label = Row.names, color=Colorcode)) + 
-    #         geom_point() + 
-    #         geom_text_repel(data = text_repel, size=4.4) +
+    #         geom_point(size=3) + 
+    #         geom_text_repel(data = text_repel, size=7) +
     #         theme_minimal() +
     #         labs(x = "Log2 Fold Change Dimension 1", y="Log 2 Fold Change Dimension 2") +
     #         scale_color_manual(
     #             values = c(HHC = colors[1], First = colors[4], Second = colors[7]),
-    #             labels = c(HHC = "Healthy", First = "Progressors without symptoms", Second = "Progressors with symptoms")
+    #             labels = c(HHC = "Healthy", First = "Progressors t=1", Second = "Progressors t=2")
     #         ) +
     #         guides(color=guide_legend("Patient Information")) +
     #         theme(
