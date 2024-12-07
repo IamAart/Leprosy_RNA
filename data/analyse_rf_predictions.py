@@ -1,6 +1,10 @@
+import os
 import pandas as pd
-from rf import LIBRARY_COMBINATIONS, MIN
-# TODO: PUSH THIS TO MAIN
+from dotenv import load_dotenv
+
+load_dotenv()
+LIBRARY_COMBINATIONS = eval(os.getenv("LIBRARY_COMBINATIONS").replace('"', ''))
+MIN = os.getenv("MIN")
 
 # prepare for data gathering from jsons
 features = pd.read_csv('./sasc326_features.csv')
@@ -39,7 +43,7 @@ result_df = pd.DataFrame({
     "Analysis type": analysis_type_list,
     "Library": library_list,
     "Number of genes": number_of_genes,
-    "Feature Selection Method": feature_type_list, 
+    "Feature Selection Method": feature_type_list,
     "Average accuracy": accuracy_average_list,
     "Average AUC score": auc_average_list,
     "Ensemble Ids": ensemble_list,
