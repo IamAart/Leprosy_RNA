@@ -6,6 +6,8 @@ library("viridis")
 library("edgeR")
 library("ggpubr")
 
+# TODO: Make these function run at the end of the file with all biotypes
+
 colors = c("#88ccee", "#44aa99", "#117733", "#332288", "#ddcc77", "#999933", "#cc6677", "#882255", "#aa4499", "#dddddd")
 
 rfe_vs_chi2_plot <- function(data) {

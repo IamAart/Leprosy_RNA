@@ -4,6 +4,8 @@ library(dplyr)
 
 source("common.R")
 
+# TODO: Make DESeq2, LimmaVoom and EdgeR work from one file
+
 # load in data with rownames
 data <- prepare_data(FILEPATH, COUNTS_NAME, FEATURES_NAME, SAMPLES_NAME, BIOTYPES)
 counts <- data[["counts"]]

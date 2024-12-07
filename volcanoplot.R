@@ -5,8 +5,9 @@ library("ggrepel")
 library("reshape2")
 library("stringr")
 
-colors = c("#88ccee", "#44aa99", "#117733", "#332288", "#ddcc77", "#999933", "#cc6677", "#882255", "#aa4499", "#dddddd")
+# TODO: Create one function for the VolcanoPlot with the possibility to filter on the subset of genes defined in the .env
 
+colors = c("#88ccee", "#44aa99", "#117733", "#332288", "#ddcc77", "#999933", "#cc6677", "#882255", "#aa4499", "#dddddd")
 
 VolcanoPlot <- function( d, top_20 ) {
     text_repel <- d[d$Colorcode %in% c("up_c", "down_c", "up_nc", "down_nc"), ]
@@ -47,8 +48,7 @@ VolcanoPlot <- function( d, top_20 ) {
 }
 
 VolcanoPlot_Final_Results <- function( data, log2_off, cut_off, coding, non_coding ) {
-    genes <- c('ENSG00000204387', 'ENSG00000233493', 'ENSG00000179085', 'ENSG00000170889', 'ENSG00000236552', 'ENSG00000225864', 'ENSG00000141933', 'ENSG00000272906', 'ENSG00000215908', 'ENSG00000269893', 'ENSG00000226287', 'ENSG00000203875', 'ENSG00000274012', 'ENSG00000278771', 'ENSG00000145337', 'ENSG00000255559', 'ENSG00000258920', 'ENSG00000215414', 'ENSG00000234741', 'ENSG00000253683')
-    
+    genes <- Sys.getenv("SUBSET_ENSEMBLES")
     d <- data %>%
           mutate( Colorcode = case_when(
               Row.names %in% genes & Log2FoldChange >= log2_off & P.Adjust <= cut_off & biotype %in% coding ~ "up_c" ,
@@ -168,10 +168,10 @@ run_volcanoplot <- function(data_path_list, cut_off, log2_off, non_coding, codin
   }
 }
 
-CUT_OFF <- 0.05
-LOG2_OFF <- log2(1.5)
-NON_CODING_BIOTYPES <- c("unitary_pseudogene", "unprocessed_pseudogene", "processed_pseudogene", "transcribed_unprocessed_pseudogene", "antisense", "transcribed_unitary_pseudogene", "polymorphic_pseudogene", "lincRNA", "sense_intronic", "transcribed_processed_pseudogene", "sense_overlapping", "IG_V_pseudogene", "pseudogene", "3prime_overlapping_ncRNA", "bidirectional_promoter_lncRNA", "snRNA", "miRNA", "misc_RNA", "snoRNA", "rRNA", "Mt_tRNA", "Mt_rRNA", "TR_V_pseudogene", "TR_J_pseudogene", "IG_C_pseudogene", "IG_J_pseudogene", "scRNA", "scaRNA", "vaultRNA", "sRNA", "macro_lncRNA", "non_coding", "IG_pseudogene", "processed_transcript", "ribozyme")
-CODING_BIOTYPES <- c("IG_D_gene", "protein_coding", "TR_V_gene", "IG_V_gene", "IG_C_gene", "IG_J_gene", "TR_J_gene", "TR_C_gene", "TR_D_gene", "TEC")
+NON_CODING_BIOTYPES <- Sys.getenv("NON_CODING_BIOTYPES")
+CODING_BIOTYPES <- Sys.getenv("CODING_BIOTYPES")
+CUT_OFF <- as.numeric(Sys.getenv("CUT_OFF"))
+LOG2_OFF <- log2(as.numeric(Sys.getenv("LOG2_OFF")))
 
 paths <- list(
   "./data/DESeq2/All_GENES_DESeq2_RNA_SEQ.xlsx",
@@ -187,7 +187,6 @@ plot_names <- list(
 
 subset_genes <- NULL # "Best"  # "All" NULL "Best_of_Three"
 run_volcanoplot(paths, CUT_OFF, LOG2_OFF, NON_CODING_BIOTYPES, CODING_BIOTYPES, plot_names, subset_genes)
-
 
 ggplot_build(VolcanoPlot_Final_Results(read_excel("./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"), LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES))
 ggsave(paste0("./data/VolcanoPlots/Final_RF_volcanoplot.png"), VolcanoPlot_Final_Results(read_excel("./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"), LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES), width=18, height=10, dpi=720)

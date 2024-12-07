@@ -1,5 +1,7 @@
 import pandas as pd
 
+# TODO: Add these to analyse_rf_predictions.py
+
 data = pd.read_excel("data/Current_Comparison_SVM_RF/rf_analysis_9_22.xlsx")
 data = data.sort_values("auc", ascending=False)
 data = data[data["auc"]>=0.96]
