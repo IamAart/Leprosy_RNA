@@ -275,10 +275,12 @@ if __name__ == "__main__":
         subset_min = int(os.getenv("SUBSET_MIN"))
         subset_max = int(os.getenv("SUBSET_MAX"))
         dir_path = f"./Predictions/Subset/Pictures"
+        dir_path_json = f"./Predictions/Subset/results.json"
         if os.path.exists(dir_path):
             dir_path = f"./Predictions/Subset_Test/Pictures"
+            dir_path_json = f"./Predictions/Subset_Test/results.json"
         os.makedirs(dir_path)
         list_selectors, gene_names = find_best_selector_genes(x_dataset, y_dataset, subset_ensembles, features, subset_min, subset_max, subset_model)
         result_dict = perform_random_forest(list_selectors, x_dataset, y_dataset, ITERATIONS_CROSS_VALIDATION, gene_names, dir_path)
-        with open(f"./Predictions/Subset/results.json", 'w') as f:
+        with open(dir_path_json, 'w') as f:
             json.dump(result_dict, f)

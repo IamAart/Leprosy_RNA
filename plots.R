@@ -14,20 +14,20 @@ CODING_BIOTYPES <- as.vector(strsplit(Sys.getenv("CODING_BIOTYPES"), ","))[[1]]
 CUT_OFF <- as.numeric(Sys.getenv("CUT_OFF"))
 LOG2_OFF <- log2(as.numeric(Sys.getenv("LOG2_OFF")))
 
-colors = c("#88ccee", "#44aa99", "#117733", "#332288", "#ddcc77", "#999933", "#cc6677", "#882255", "#aa4499", "#dddddd")
+colors <- c("#88ccee", "#44aa99", "#117733", "#332288", "#ddcc77", "#999933", "#cc6677", "#882255", "#aa4499", "#dddddd")
 
 rfe_vs_chi2_plot <- function(data, plot_path) {
-    data$feature_selection <- as.factor(data$feature_selection)
-    plot <- ggplot(data, aes(x=feature_selection, y=auc, fill=feature_selection)) +
+    data$`Feature Selection Method` <- as.factor(data$`Feature Selection Method`)
+    plot <- ggplot(data, aes(x=`Feature Selection Method`, y=`Average AUC score`, fill=`Feature Selection Method`)) +
         geom_boxplot() +
         theme_minimal() +
-        labs(x = "Feature Selector", y = "Average Auc score", color="Feature selector") +
+        labs(x = "Feature Selection Method", y = "Average AUC score", color="Feature Selection Method") +
         scale_fill_manual(
-            values = c(rfe = colors[7], chi2 = colors[2]),
-            labels = c(rfe = "RFE", chi2 = expression(chi^2))
+            values = c(RFE = colors[7], chi2 = colors[2]),
+            labels = c(RFE = "RFE", chi2 = expression(chi^2))
         ) +
         scale_x_discrete(
-            labels = c("rfe" = "RFE", "chi2" = expression(chi^2))
+            labels = c("RFE" = "RFE", "chi2" = expression(chi^2))
         ) +
         scale_y_continuous(
             breaks = c(0.85, 0.9, 0.95, 1.0),
@@ -54,17 +54,17 @@ rfe_vs_chi2_plot <- function(data, plot_path) {
 }
 
 type_comparison_plot <- function(data, plot_path) {
-    data$gene_type[data$gene_type == "nc"] <- "non_coding"
-    plot <- ggplot(data, aes(x=gene_type, y=auc, fill=gene_type)) +
+    data$`Analysis type`[data$`Analysis type` == "NON_CODING"] <- "non-coding"
+    data$`Analysis type`[data$`Analysis type` == "CODING"] <- "coding"
+    data$`Analysis type`[data$`Analysis type` == "All_GENES"] <- "all"
+    plot <- ggplot(data, aes(x=`Analysis type`, y=`Average AUC score`, fill=`Analysis type`)) +
         geom_boxplot() +
-
-        labs(x = "Type of RNA", y = "Average Auc score", fill="Type of RNA") +
+        labs(x = "Type of RNA", y = "Average AUC score", fill="Type of RNA") +
         scale_fill_manual(
-            values = c(all = colors[1], non_coding = colors[1], coding = colors[1]),
+            values = c(all = colors[1], `non-coding` = colors[1], coding = colors[1]),
         ) +
         scale_x_discrete(
-            limits = c("all", "non_coding", "coding"),
-            labels = c("all" = "ALL", "non_coding" = "NC", "coding" = "CODING")
+            limits = c("all", "non-coding", "coding")
         ) +
         theme_minimal() +
         theme(
@@ -81,20 +81,20 @@ type_comparison_plot <- function(data, plot_path) {
             legend.title = element_text(size = 17),    # Legend title size
             legend.text = element_text(size = 16)      # Legend labels size
         ) +
-        stat_compare_means(comparisons = list(c("all", "coding"), c("coding", "non_coding"), c("all", "non_coding")))
+        stat_compare_means(comparisons = list(c("all", "coding"), c("coding", "non-coding"), c("all", "non-coding")))
 
     ggsave(plot_path, plot, width=15, height=10, dpi=720)
 }
 
 box_plot_libraries <- function(data, biotype, plot_path) {
-    data <- data[data["gene_type"] == biotype, ]
-    if (biotype == "nc") {
-        data$gene_type[data$gene_type == "nc"] <- "non_coding"
-    }
-    plot <- ggplot(data, aes(x=Library, y=auc, fill=Library)) +
+    data$`Analysis type`[data$`Analysis type` == "NON_CODING"] <- "non-coding"
+    data$`Analysis type`[data$`Analysis type` == "CODING"] <- "coding"
+    data$`Analysis type`[data$`Analysis type` == "All_GENES"] <- "all"
+    data <- data[data["Analysis type"] == biotype, ]
+    plot <- ggplot(data, aes(x=`Library`, y=`Average AUC score`, fill=`Library`)) +
         geom_boxplot() +
         theme_minimal() +
-        labs(x = "DGE Analysis Method", y = "Average Auc score", fill="RNA Sequencing Method") +
+        labs(x = "DGE Analysis Method", y = "Average AUC score", fill="RNA Sequencing Method") +
         scale_fill_manual(
             values = c("All" = colors[9], "DESeq2" = colors[9], "EdgeR" = colors[9], "LimmaVoom" = colors[9], "Only combined libraries" = colors[9]),
         ) +
@@ -261,12 +261,12 @@ VolcanoPlot_DGE <- function(data, log2_off, cut_off, coding, non_coding, genes, 
 
 # Run comparison plots
 print("RUNNING COMPARISON PLOTS")
-data <- readxl::read_excel("./data/Current_Comparison_SVM_RF/rf_analysis_9_22.xlsx")
+data <- readxl::read_excel("./data/Predictions/analysis_rf_predictions.xlsx")
 rfe_vs_chi2_plot(data, "./data/Plots/boxplot_rfe_vs_chi2.png")
 type_comparison_plot(data, "./data/Plots/boxplot_rna_type.png")
 box_plot_libraries(data, "all", "./data/Plots/boxplot_libraries_all_genes.png")
 box_plot_libraries(data, "coding", "./data/Plots/boxplot_libraries_coding_genes.png")
-box_plot_libraries(data, "nc", "./data/Plots/boxplot_libraries_non_coding_genes.png")
+box_plot_libraries(data, "non-coding", "./data/Plots/boxplot_libraries_non_coding_genes.png")
 
 # run Volcanoplot for results from every DGE analysis
 print("RUNNING DGE VOLCANO PLOTS")
@@ -309,6 +309,6 @@ if (Sys.getenv("SUBSET_ENSEMBLES") != "") {
   if (Sys.getenv("SUBSET_GENE_NAMES") != "") {
     print("RUNNING SUBSET GENE EXPRESSION PLOT")
     subset_genes <- as.vector(strsplit(Sys.getenv("SUBSET_GENE_NAMES"), ","))[[1]]
-    make_boxplot_gene_expression(subset_ensembles, subset_genes, "./data/Plots/boxplot_subset_gene_expression.png")
+    make_boxplot_gene_expression(subset_ensembles, subset_genes, "./data/Plots/Subset_gene_expression_box_plot.png")
   }
 }

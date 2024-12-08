@@ -1,5 +1,4 @@
 import os
-
 import dotenv
 import pandas as pd
 from dotenv import load_dotenv
@@ -19,7 +18,8 @@ def best_dge_genes(data, dge_path, sorted_by_p_value):
     :return: a list of the best genes with their corresponding ensemble IDs, gene names and bio-types
     """
     data = data.sort_values("Average AUC score", ascending=False)
-    data = data[data["Average AUC score"] > data["Average AUC score"].quantile(0.9)]
+    data = data[data["Average AUC score"] > data["Average AUC score"].quantile(0.9)] # Possible to be used in report
+    # data = data[data["Average AUC score"] > 0.96] # Used in presentation
     ensembles_dict = dict()
     for _, row in data.iterrows():
         e_list = row["Ensemble Ids"].split(", ")
@@ -35,7 +35,7 @@ def best_dge_genes(data, dge_path, sorted_by_p_value):
     else:
         results = results.set_index("Row.names").reindex(ensemble_list).reset_index()
     results = results[["gene_name", "Row.names", "biotype"]]
-    results.to_excel("./Predictions_current/best_dge_genes.xlsx")
+    results.to_excel("./Predictions/best_dge_genes.xlsx")
     return results["Row.names"].tolist(), results["gene_name"].tolist(), results["biotype"].tolist()
 
 
@@ -122,6 +122,6 @@ dotenv.set_key(dotenv_file, "SUBSET_GENE_NAMES", ",".join(gene_names))
 
 # IF RF analysis on the best genes is done
 if os.getenv("SUBSET_MODEL") in ["RFE", "chi2"]:
-    best_result_df = combine_rf_results(["SUBSET"], True)
+    best_result_df = combine_rf_results(["SUBSET"], False)
     best_result_df.to_csv("./Predictions/analysis_rf_predictions_best_genes.csv")
     best_result_df.to_excel("./Predictions/analysis_rf_predictions_best_genes.xlsx")
