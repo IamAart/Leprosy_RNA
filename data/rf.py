@@ -262,8 +262,9 @@ if __name__ == "__main__":
                 # find_best_parameters(x_dataset, y_dataset, genes) # Only used to find parameters once
                 for model in ["RFE", "chi2"]:
                         dir_path = f"./Predictions/{method}/{option}/{model}/Pictures"
-                        if not os.path.exists(dir_path):
-                            os.makedirs(dir_path)
+                        if os.path.exists(dir_path):
+                            dir_path = f"./Predictions_new/{method}/{option}/{model}/Pictures"
+                        os.makedirs(dir_path)
                         list_selectors, gene_names = find_best_selector_genes(x_dataset, y_dataset, genes, features, MIN, MAX, model)
                         result_dict = perform_random_forest(list_selectors, x_dataset, y_dataset, ITERATIONS_CROSS_VALIDATION, gene_names, dir_path)
                         with open(f"./Predictions/{method}/{option}/{model}/results.json", 'w') as f:
@@ -274,8 +275,9 @@ if __name__ == "__main__":
         subset_min = int(os.getenv("SUBSET_MIN"))
         subset_max = int(os.getenv("SUBSET_MAX"))
         dir_path = f"./Predictions/Subset/Pictures"
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
+        if os.path.exists(dir_path):
+            dir_path = f"./Predictions/Subset_Test/Pictures"
+        os.makedirs(dir_path)
         list_selectors, gene_names = find_best_selector_genes(x_dataset, y_dataset, subset_ensembles, features, subset_min, subset_max, subset_model)
         result_dict = perform_random_forest(list_selectors, x_dataset, y_dataset, ITERATIONS_CROSS_VALIDATION, gene_names, dir_path)
         with open(f"./Predictions/Subset/results.json", 'w') as f:

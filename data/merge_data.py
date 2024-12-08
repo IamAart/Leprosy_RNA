@@ -98,16 +98,20 @@ def merge_data(data_deseq, data_limma, data_edger, biotype):
     with pd.ExcelWriter(f"./Venn_Diagrams/Gene_name_data/GENES_{biotype}_VENN_DATA.xlsx") as writer:
         merged_dataset_genes.to_excel(writer, index=False)
 
+# load the environment variables
 load_dotenv()
 
+# initialize the variables
 COLUMN_NAME = "Row.names"
 NON_CODING_BIOTYPES = os.getenv("NON_CODING_BIOTYPES").split(",")
 CODING_BIOTYPES = os.getenv("CODING_BIOTYPES").split(",")
 
+# read the datasets of dge genes from the three methods
 deseq = pd.read_csv(f"./DESeq2/All_GENES_DESeq2_RNA_SEQ.csv", index_col=1)
 limma = pd.read_csv(f"./LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.csv", index_col=1)
 edger = pd.read_csv(f"./EdgeR/All_GENES_EdgeR_RNA_SEQ.csv", index_col=1)
 
+# merge the datasets for the different biotypes into one venn diagram dataset
 for biotype, selection in {"NON_CODING": NON_CODING_BIOTYPES, "CODING": CODING_BIOTYPES, "All_GENES": None}.items():
     deseq_selection = dataset_with_selection(deseq, selection)
     edger_selection = dataset_with_selection(edger, selection)

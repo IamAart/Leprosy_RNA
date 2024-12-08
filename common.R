@@ -3,13 +3,12 @@ library("dplyr")
 library("ggplot2")
 library("ggrepel")
 library("tibble")
-# library("stringr")
+library("stringr")
+library("dotenv")
 
-# TODO: FIX THIS
-NON_CODING_BIOTYPES <-Sys.getenv("NON_CODING_BIOTYPES")
-# print(Sys.getenv("NON_CODING_BIOTYPES"))
-print(NON_CODING_BIOTYPES)
-CODING_BIOTYPES <- Sys.getenv("CODING_BIOTYPES")
+dotenv::load_dot_env(file = ".env")
+NON_CODING_BIOTYPES <- as.vector(strsplit(Sys.getenv("NON_CODING_BIOTYPES"), ","))
+CODING_BIOTYPES <- as.vector(strsplit(Sys.getenv("CODING_BIOTYPES"), ","))
 CUT_OFF <- as.numeric(Sys.getenv("CUT_OFF"))
 LOG2_OFF <- log2(as.numeric(Sys.getenv("LOG2_OFF")))
 
