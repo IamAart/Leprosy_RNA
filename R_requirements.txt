@@ -1,0 +1,7 @@
+"dotenv" 1.0.3
+"writexl" 1.5.1
+"dplyr" 1.1.4
+"ggplot2" 3.5.1
+"ggrepel" 0.9.6
+"stringr" 1.5.1
+"tibble" 3.2.1
