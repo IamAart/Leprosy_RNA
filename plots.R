@@ -8,6 +8,7 @@ library("reshape2")
 library("stringr")
 library("dotenv")
 
+.libPaths("./R_Packages/")
 dotenv::load_dot_env(file = ".env")
 NON_CODING_BIOTYPES <- as.vector(strsplit(Sys.getenv("NON_CODING_BIOTYPES"), ","))[[1]]
 CODING_BIOTYPES <- as.vector(strsplit(Sys.getenv("CODING_BIOTYPES"), ","))[[1]]

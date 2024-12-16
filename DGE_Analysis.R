@@ -4,6 +4,8 @@ library("DESeq2")
 library("dplyr")
 source("common.R")
 
+.libPaths("./R_Packages/")
+
 # These global variables are gathered from the .env file in the common.R file
 data <- prepare_data(FILEPATH, COUNTS_NAME, FEATURES_NAME, SAMPLES_NAME)
 counts <- data[["counts"]]
