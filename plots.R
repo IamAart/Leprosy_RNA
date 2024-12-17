@@ -49,7 +49,7 @@ rfe_vs_chi2_plot <- function(data, plot_path) {
             legend.title = element_text(size = 17),    # Legend title size
             legend.text = element_text(size = 16)      # Legend labels size
         ) +
-        stat_compare_means(comparisons = list(c("chi2", "rfe")))
+        stat_compare_means(comparisons = list(c("chi2", "RFE")))
 
     ggsave(plot_path, plot, width=15, height=10, dpi=720)
 }
@@ -264,52 +264,52 @@ VolcanoPlot_DGE <- function(data, log2_off, cut_off, coding, non_coding, genes, 
 print("RUNNING COMPARISON PLOTS")
 data <- readxl::read_excel("./data/Predictions/analysis_rf_predictions.xlsx")
 rfe_vs_chi2_plot(data, "./data/Plots/boxplot_rfe_vs_chi2.png")
-type_comparison_plot(data, "./data/Plots/boxplot_rna_type.png")
-box_plot_libraries(data, "all", "./data/Plots/boxplot_libraries_all_genes.png")
-box_plot_libraries(data, "coding", "./data/Plots/boxplot_libraries_coding_genes.png")
-box_plot_libraries(data, "non-coding", "./data/Plots/boxplot_libraries_non_coding_genes.png")
+# type_comparison_plot(data, "./data/Plots/boxplot_rna_type.png")
+# box_plot_libraries(data, "all", "./data/Plots/boxplot_libraries_all_genes.png")
+# box_plot_libraries(data, "coding", "./data/Plots/boxplot_libraries_coding_genes.png")
+# box_plot_libraries(data, "non-coding", "./data/Plots/boxplot_libraries_non_coding_genes.png")
 
-# run Volcanoplot for results from every DGE analysis
-print("RUNNING DGE VOLCANO PLOTS")
-VolcanoPlot_DGE(
-  readxl::read_excel( "./data/DESeq2/All_GENES_DESeq2_RNA_SEQ.xlsx"),
-  LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, NULL, NULL,
-  "./data/Plots/DESeq2_volcano_plot.png"
-)
-VolcanoPlot_DGE(
-  readxl::read_excel( "./data/EdgeR/All_GENES_EdgeR_RNA_SEQ.xlsx"),
-  LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, NULL, NULL,
-  "./data/Plots/EdgeR_volcano_plot.png"
-)
-VolcanoPlot_DGE(
-  readxl::read_excel( "./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"),
-  LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, NULL, NULL,
-  "./data/Plots/LimmaVoom_volcano_plot.png"
-)
+# # run Volcanoplot for results from every DGE analysis
+# print("RUNNING DGE VOLCANO PLOTS")
+# VolcanoPlot_DGE(
+#   readxl::read_excel( "./data/DESeq2/All_GENES_DESeq2_RNA_SEQ.xlsx"),
+#   LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, NULL, NULL,
+#   "./data/Plots/DESeq2_volcano_plot.png"
+# )
+# VolcanoPlot_DGE(
+#   readxl::read_excel( "./data/EdgeR/All_GENES_EdgeR_RNA_SEQ.xlsx"),
+#   LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, NULL, NULL,
+#   "./data/Plots/EdgeR_volcano_plot.png"
+# )
+# VolcanoPlot_DGE(
+#   readxl::read_excel( "./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"),
+#   LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, NULL, NULL,
+#   "./data/Plots/LimmaVoom_volcano_plot.png"
+# )
 
-# run Volcanoplot for results from every DGE analysis with subset of genes found by Random Forest
-if (Sys.getenv("SUBSET_ENSEMBLES") != "") {
-  print("RUNNING SUBSET DGE VOLCANO PLOTS")
-  subset_ensembles <- as.vector(strsplit(Sys.getenv("SUBSET_ENSEMBLES"), ","))[[1]]
-  VolcanoPlot_DGE(
-    readxl::read_excel("./data/DESeq2/All_GENES_DESeq2_RNA_SEQ.xlsx"),
-    LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles, NULL,
-    "./data/Plots/Subset_DESeq2_volcano_plot.png"
-  )
-  VolcanoPlot_DGE(
-    readxl::read_excel("./data/EdgeR/All_GENES_EdgeR_RNA_SEQ.xlsx"),
-    LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles, NULL,
-    "./data/Plots/Subset_EdgeR_volcano_plot.png"
-  )
-  VolcanoPlot_DGE(
-    readxl::read_excel("./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"),
-    LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles, NULL,
-    "./data/Plots/Subset_LimmaVoom_volcano_plot.png"
-  )
+# # run Volcanoplot for results from every DGE analysis with subset of genes found by Random Forest
+# if (Sys.getenv("SUBSET_ENSEMBLES") != "") {
+#   print("RUNNING SUBSET DGE VOLCANO PLOTS")
+#   subset_ensembles <- as.vector(strsplit(Sys.getenv("SUBSET_ENSEMBLES"), ","))[[1]]
+#   VolcanoPlot_DGE(
+#     readxl::read_excel("./data/DESeq2/All_GENES_DESeq2_RNA_SEQ.xlsx"),
+#     LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles, NULL,
+#     "./data/Plots/Subset_DESeq2_volcano_plot.png"
+#   )
+#   VolcanoPlot_DGE(
+#     readxl::read_excel("./data/EdgeR/All_GENES_EdgeR_RNA_SEQ.xlsx"),
+#     LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles, NULL,
+#     "./data/Plots/Subset_EdgeR_volcano_plot.png"
+#   )
+#   VolcanoPlot_DGE(
+#     readxl::read_excel("./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"),
+#     LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles, NULL,
+#     "./data/Plots/Subset_LimmaVoom_volcano_plot.png"
+#   )
 
-  if (Sys.getenv("SUBSET_GENE_NAMES") != "") {
-    print("RUNNING SUBSET GENE EXPRESSION PLOT")
-    subset_genes <- as.vector(strsplit(Sys.getenv("SUBSET_GENE_NAMES"), ","))[[1]]
-    make_boxplot_gene_expression(subset_ensembles, subset_genes, "./data/Plots/Subset_gene_expression_box_plot.png")
-  }
-}
+#   if (Sys.getenv("SUBSET_GENE_NAMES") != "") {
+#     print("RUNNING SUBSET GENE EXPRESSION PLOT")
+#     subset_genes <- as.vector(strsplit(Sys.getenv("SUBSET_GENE_NAMES"), ","))[[1]]
+#     make_boxplot_gene_expression(subset_ensembles, subset_genes, "./data/Plots/Subset_gene_expression_box_plot.png")
+#   }
+# }

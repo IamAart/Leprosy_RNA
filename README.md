@@ -59,7 +59,10 @@ Within this repository, two main tasks are performed, namely Differential Gene E
     - `CUT_OFF`, you wish to use as p-value cut off that differentially expressed genes should be below
     - `LOG2_OFF`, you wish to use a fold change cut off that differentially expressed genes should be above or below -LOG2_OFF. Currently, 1.5 is used, which means a fold change difference of 50% between conditions
     - `BOOL_MDS_PLOT`, `"TRUE"` or `"FALSE"` to indicate whether MDS plots should be made during the analysis
-2. Run the command `R -e 'source("./DGE_Analysis.R")
+2. Run the command 
+    ```bash 
+    R -e 'source("./DGE_Analysis.R")`
+    ```
 3. See the results in the folder `"./data/<DGE_METHOD>"` and the MDS plots (if set to TRUE) in the folder `"./data/Plots"`
 
 ### Random Forest
