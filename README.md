@@ -35,7 +35,7 @@ Instructions on how to install all python packages in a virtual environment
 
 ```bash
 # Create a virtual environment
-python -m venv "<./Path/For/Venv>"
+python -m venv "./venv"
 
 # Install dependencies
 pip install -r "requirements.txt
