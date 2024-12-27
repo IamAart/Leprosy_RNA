@@ -12,9 +12,9 @@ authors:
     family-names: Rosmolen
     email: a.rosmolen@umail.leidenuniv.nl
     affiliation: Leiden University
-  - given-names: Emma Rose
+  - given-names: Emma Rosa
     name-particle: van
     family-names: Eerde
     email: e.r.van.eerde@umail.leidenuniv.nl
-    affiliation: Universiteit Leiden
+    affiliation: Leiden University
 repository-code: 'https://github.com/IamAart/Leprosy_RNA'
