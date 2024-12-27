@@ -1,0 +1,20 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Leprosy RNA analysis
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Aart
+    family-names: Rosmolen
+    email: a.rosmolen@umail.leidenuniv.nl
+    affiliation: Leiden University
+  - given-names: Emma Rose
+    name-particle: van
+    family-names: Eerde
+    email: e.r.van.eerde@umail.leidenuniv.nl
+    affiliation: Universiteit Leiden
+repository-code: 'https://github.com/IamAart/Leprosy_RNA'
