@@ -44,6 +44,7 @@ def train_test_total_dataset():
     counts = pd.read_csv("./sasc326_counts.csv", index_col=0)
     samples = pd.read_csv("./sasc326_samples.csv")
     counts_normalized = co.tmm(counts).transpose()
+    pd.DataFrame(counts_normalized).to_csv("./sasc326_counts_normalized.csv")
 
     dict_samples = dict()
     for i, row in samples.iterrows():
@@ -239,48 +240,48 @@ if __name__ == "__main__":
     features = pd.read_csv("./sasc326_features.csv")
     # Load and adjust data to correct format
     dataset = train_test_total_dataset()
-    dataset = dataset.drop(["s103830.003.011", "s103830.004.017"])
-    dataset = dataset.dropna(subset=["Result"])
+    # dataset = dataset.drop(["s103830.003.011", "s103830.004.017"])
+    # dataset = dataset.dropna(subset=["Result"])
 
-    # Create x and y dataset and get gene sets from file
-    x_dataset = dataset.drop(['Result'], axis=1)
-    y_dataset = dataset['Result'].astype(int)
+    # # Create x and y dataset and get gene sets from file
+    # x_dataset = dataset.drop(['Result'], axis=1)
+    # y_dataset = dataset['Result'].astype(int)
 
-    subset_model = os.getenv("SUBSET_MODEL")
-    # if these are not set, find the results for all the genes of all the biotypes of all the library combinations
-    if subset_model is None:
-        for method in ["All_GENES", "CODING", "NON_CODING"]:
-            all_genes = generate_genes(LIBRARY_COMBINATIONS, method)
+    # subset_model = os.getenv("SUBSET_MODEL")
+    # # if these are not set, find the results for all the genes of all the biotypes of all the library combinations
+    # if subset_model is None:
+    #     for method in ["All_GENES", "CODING", "NON_CODING"]:
+    #         all_genes = generate_genes(LIBRARY_COMBINATIONS, method)
 
-            # Can switch below for OWN GENES
-            for option, genes in all_genes.items():
-                print(option)
+    #         # Can switch below for OWN GENES
+    #         for option, genes in all_genes.items():
+    #             print(option)
 
-                if x_dataset is None or y_dataset is None:
-                    raise Exception("Training data is not correct")
+    #             if x_dataset is None or y_dataset is None:
+    #                 raise Exception("Training data is not correct")
 
-                # find_best_parameters(x_dataset, y_dataset, genes) # Only used to find parameters once
-                for model in ["RFE", "chi2"]:
-                        dir_path = f"./Predictions/{method}/{option}/{model}/Pictures"
-                        if os.path.exists(dir_path):
-                            dir_path = f"./Predictions_new/{method}/{option}/{model}/Pictures"
-                        os.makedirs(dir_path)
-                        list_selectors, gene_names = find_best_selector_genes(x_dataset, y_dataset, genes, features, MIN, MAX, model)
-                        result_dict = perform_random_forest(list_selectors, x_dataset, y_dataset, ITERATIONS_CROSS_VALIDATION, gene_names, dir_path)
-                        with open(f"./Predictions/{method}/{option}/{model}/results.json", 'w') as f:
-                            json.dump(result_dict, f)
-    # if these are set, find the results for the subset of genes
-    else:
-        subset_ensembles = os.getenv("SUBSET_ENSEMBLES").split(",")
-        subset_min = int(os.getenv("SUBSET_MIN"))
-        subset_max = int(os.getenv("SUBSET_MAX"))
-        dir_path = f"./Predictions/Subset/Pictures"
-        dir_path_json = f"./Predictions/Subset/results.json"
-        if os.path.exists(dir_path):
-            dir_path = f"./Predictions/Subset_Test/Pictures"
-            dir_path_json = f"./Predictions/Subset_Test/results.json"
-        os.makedirs(dir_path)
-        list_selectors, gene_names = find_best_selector_genes(x_dataset, y_dataset, subset_ensembles, features, subset_min, subset_max, subset_model)
-        result_dict = perform_random_forest(list_selectors, x_dataset, y_dataset, ITERATIONS_CROSS_VALIDATION, gene_names, dir_path)
-        with open(dir_path_json, 'w') as f:
-            json.dump(result_dict, f)
+    #             # find_best_parameters(x_dataset, y_dataset, genes) # Only used to find parameters once
+    #             for model in ["RFE", "chi2"]:
+    #                     dir_path = f"./Predictions/{method}/{option}/{model}/Pictures"
+    #                     if os.path.exists(dir_path):
+    #                         dir_path = f"./Predictions_new/{method}/{option}/{model}/Pictures"
+    #                     os.makedirs(dir_path)
+    #                     list_selectors, gene_names = find_best_selector_genes(x_dataset, y_dataset, genes, features, MIN, MAX, model)
+    #                     result_dict = perform_random_forest(list_selectors, x_dataset, y_dataset, ITERATIONS_CROSS_VALIDATION, gene_names, dir_path)
+    #                     with open(f"./Predictions/{method}/{option}/{model}/results.json", 'w') as f:
+    #                         json.dump(result_dict, f)
+    # # if these are set, find the results for the subset of genes
+    # else:
+    #     subset_ensembles = os.getenv("SUBSET_ENSEMBLES").split(",")
+    #     subset_min = int(os.getenv("SUBSET_MIN"))
+    #     subset_max = int(os.getenv("SUBSET_MAX"))
+    #     dir_path = f"./Predictions/Subset/Pictures"
+    #     dir_path_json = f"./Predictions/Subset/results.json"
+    #     if os.path.exists(dir_path):
+    #         dir_path = f"./Predictions/Subset_Test/Pictures"
+    #         dir_path_json = f"./Predictions/Subset_Test/results.json"
+    #     os.makedirs(dir_path)
+    #     list_selectors, gene_names = find_best_selector_genes(x_dataset, y_dataset, subset_ensembles, features, subset_min, subset_max, subset_model)
+    #     result_dict = perform_random_forest(list_selectors, x_dataset, y_dataset, ITERATIONS_CROSS_VALIDATION, gene_names, dir_path)
+    #     with open(dir_path_json, 'w') as f:
+    #         json.dump(result_dict, f)

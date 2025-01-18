@@ -4,3 +4,4 @@ conorm==1.2.0
 numpy==2.2.0
 matplotlib==3.9.3
 python-dotenv==1.0.1
+openpyxl==3.0.9
