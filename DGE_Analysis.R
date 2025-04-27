@@ -51,9 +51,10 @@ if (DGE_METHOD == "DESeq2") {
   }
   else if (DGE_METHOD == "EdgeR") {
     # Prepare data for edgeR
-    disp <- estimateGLMCommonDisp(normalized_data,design)
-    disp <- estimateGLMTrendedDisp(disp, design, method="power")
-    disp <- estimateGLMTagwiseDisp(disp, design)
+    disp <- estimateDisp(normalized_data, design)
+    # disp <- estimateGLMCommonDisp(normalized_data,design)
+    # disp <- estimateGLMTrendedDisp(disp, design, method="power")
+    # disp <- estimateGLMTagwiseDisp(disp, design)
     fit <- glmFit(disp, design)
     # Perform DGE Analysis
     lrt <- glmLRT(fit, contrast=contrast)

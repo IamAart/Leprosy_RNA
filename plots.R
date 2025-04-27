@@ -8,7 +8,7 @@ library("reshape2")
 library("stringr")
 library("dotenv")
 
-.libPaths("./R_Packages/")
+# .libPaths("./R_Packages/")
 dotenv::load_dot_env(file = ".env")
 NON_CODING_BIOTYPES <- as.vector(strsplit(Sys.getenv("NON_CODING_BIOTYPES"), ","))[[1]]
 CODING_BIOTYPES <- as.vector(strsplit(Sys.getenv("CODING_BIOTYPES"), ","))[[1]]
@@ -18,13 +18,15 @@ LOG2_OFF <- log2(as.numeric(Sys.getenv("LOG2_OFF")))
 colors <- c("#88ccee", "#44aa99", "#117733", "#332288", "#ddcc77", "#999933", "#cc6677", "#882255", "#aa4499", "#dddddd")
 
 rfe_vs_chi2_plot <- function(data, plot_path) {
-    data$`Feature Selection Method` <- as.factor(data$`Feature Selection Method`)
-    means <- data %>% group_by(`Feature Selection Method`) %>% summarize(m=mean(`Average AUC score`))
+    data <- data[data$model == "RF", ]
+    data$`feature_selection` <- as.factor(data$`feature_selection`)
+    print(unique(data$`feature_selection`))
+    means <- data %>% group_by("feature_selection") %>% summarize(m=mean(`auc`))
     print(means)
-    plot <- ggplot(data, aes(x=`Feature Selection Method`, y=`Average AUC score`, fill=`Feature Selection Method`)) +
+    plot <- ggplot(data, aes(x=feature_selection, y=`auc`, fill=feature_selection)) +
         geom_boxplot() +
         theme_minimal() +
-        labs(x = "Feature Selection Method", y = "Average AUC score", color="Feature Selection Method") +
+        labs(x = "feature_selection", y = "auc", color="feature_selection") +
         scale_fill_manual(
             values = c(RFE = colors[7], chi2 = colors[2]),
             labels = c(RFE = "RFE", chi2 = expression(chi^2))
@@ -63,14 +65,15 @@ rfe_vs_chi2_plot <- function(data, plot_path) {
 }
 
 type_comparison_plot <- function(data, plot_path) {
-    data$`Analysis type`[data$`Analysis type` == "NON_CODING"] <- "NC"
-    data$`Analysis type`[data$`Analysis type` == "CODING"] <- "CODING"
-    data$`Analysis type`[data$`Analysis type` == "All_GENES"] <- "ALL"
-    means <- data %>% group_by(`Analysis type`) %>% summarize(m=mean(`Average AUC score`))
+    # data$`gene_type`[data$`gene_type` == "NON_CODING"] <- "NC"
+    # data$`gene_type`[data$`gene_type` == "CODING"] <- "CODING"
+    # data$`gene_type`[data$`gene_type` == "All_GENES"] <- "ALL"
+    data <- data[data$model == "RF", ]
+    means <- data %>% group_by(`gene_type`) %>% summarize(m=mean(`auc`))
     print(means)
-    plot <- ggplot(data, aes(x=`Analysis type`, y=`Average AUC score`, fill=`Analysis type`)) +
+    plot <- ggplot(data, aes(x=`gene_type`, y=`auc`, fill=`gene_type`)) +
         geom_boxplot() +
-        labs(x = "Type of RNA", y = "Average AUC score", fill="Type of RNA") +
+        labs(x = "gene_type", y = "auc", fill="gene_type") +
         scale_fill_manual(
             values = c(ALL = colors[1], NC = colors[1], CODING = colors[1]),
         ) +
@@ -112,21 +115,22 @@ type_comparison_plot <- function(data, plot_path) {
 }
 
 box_plot_libraries <- function(data, biotype, plot_path) {
-    data$`Analysis type`[data$`Analysis type` == "NON_CODING"] <- "non-coding"
-    data$`Analysis type`[data$`Analysis type` == "CODING"] <- "coding"
-    data$`Analysis type`[data$`Analysis type` == "All_GENES"] <- "all"
-    data <- data[data["Analysis type"] == biotype, ]
-    means <- data %>% group_by(`Library`) %>% summarize(m=mean(`Average AUC score`))
+    # data$`gene_type`[data$`gene_type` == "NON_CODING"] <- "non-coding"
+    # data$`gene_type`[data$`gene_type` == "CODING"] <- "coding"
+    # data$`gene_type`[data$`gene_type` == "All_GENES"] <- "all"
+    data <- data[data$model == "RF", ]
+    data <- data[data["gene_type"] == biotype, ]
+    means <- data %>% group_by("dge_method") %>% summarize(m=mean(`auc`))
     print(means)
-    plot <- ggplot(data, aes(x=`Library`, y=`Average AUC score`, fill=`Library`)) +
+    plot <- ggplot(data, aes(x=dge_method, y=auc, fill=`dge_method`)) +
         geom_boxplot() +
         theme_minimal() +
-        labs(x = "DGE Analysis Method", y = "Average AUC score", fill="RNA Sequencing Method") +
+        labs(x = "DGE Analysis Method", y = "auc", fill="RNA Sequencing Method") +
         scale_fill_manual(
-            values = c("All" = colors[9], "DESeq2" = colors[9], "EdgeR" = colors[9], "LimmaVoom" = colors[9], "Only combined libraries" = colors[9]),
+            values = c("Union" = colors[9], "DESeq2" = colors[9], "EdgeR" = colors[9], "LimmaVoom" = colors[9], "Intersection" = colors[9]),
         ) +
         scale_x_discrete(
-            labels = c("All" = "Union", "DESeq2" = "DESeq2", "EdgeR" = "EdgeR", "LimmaVoom" = "LimmaVoom", "Only combined libraries" = "Intersect")
+            labels = c("Union" = "Union", "DESeq2" = "DESeq2", "EdgeR" = "EdgeR", "LimmaVoom" = "LimmaVoom", "Intersection" = "Intersect")
         ) +
         scale_y_continuous(
             breaks = c(0.85, 0.9, 0.95, 1.0),
@@ -148,14 +152,14 @@ box_plot_libraries <- function(data, biotype, plot_path) {
         ) +
         stat_compare_means(
             comparisons = list(
-                c("All", "DESeq2"), c("All", "EdgeR"), c("All", "LimmaVoom"), c("All", "Only combined libraries"),
-                c("DESeq2", "EdgeR"), c("DESeq2", "LimmaVoom"), c("DESeq2", "Only combined libraries"),
-                c("EdgeR", "LimmaVoom"), c("EdgeR", "Only combined libraries"),
-                c("LimmaVoom", "Only combined libraries")
+                c("Union", "DESeq2"), c("Union", "EdgeR"), c("Union", "LimmaVoom"), c("Union", "Intersection"),
+                c("DESeq2", "EdgeR"), c("DESeq2", "LimmaVoom"), c("DESeq2", "Intersection"),
+                c("EdgeR", "LimmaVoom"), c("EdgeR", "Intersection"),
+                c("LimmaVoom", "Intersection")
             ), size=6
         ) +
         stat_summary(
-            fun = "mean", 
+            fun = "mean",
             geom = "point",
             shape = 4,
             size = 2,
@@ -294,108 +298,120 @@ VolcanoPlot_DGE <- function(data, log2_off, cut_off, coding, non_coding, genes, 
 }
 
 # Run comparison plots
-# print("RUNNING COMPARISON PLOTS")
-data <- readxl::read_excel("./data/Predictions/analysis_rf_predictions.xlsx")
+print("RUNNING COMPARISON PLOTS")
+data <- readxl::read_excel("./data/Predictions/analysis_predictions.xlsx")
 rfe_vs_chi2_plot(data, "./data/Plots/boxplot_rfe_vs_chi2.png")
 type_comparison_plot(data, "./data/Plots/boxplot_rna_type.png")
-box_plot_libraries(data, "all", "./data/Plots/boxplot_libraries_all_genes.png")
-box_plot_libraries(data, "coding", "./data/Plots/boxplot_libraries_coding_genes.png")
-box_plot_libraries(data, "non-coding", "./data/Plots/boxplot_libraries_non_coding_genes.png")
+box_plot_libraries(data, "ALL", "./data/Plots/boxplot_libraries_ALL_genes.png")
+box_plot_libraries(data, "CODING", "./data/Plots/boxplot_libraries_coding_genes.png")
+box_plot_libraries(data, "NC", "./data/Plots/boxplot_libraries_non_coding_genes.png")
 
-# subset_ensembles <- "ENSG00000215908,ENSG00000253683,ENSG00000179085,ENSG00000258920,ENSG00000234741,ENSG00000225864,ENSG00000222020,ENSG00000188290,ENSG00000272677,ENSG00000232229,ENSG00000167700,ENSG00000215414,ENSG00000145337,ENSG00000274012,ENSG00000278771,ENSG00000272906,ENSG00000273599,ENSG00000236552,ENSG00000228205,ENSG00000170889,ENSG00000204387,ENSG00000203875,ENSG00000269893,ENSG00000172803,ENSG00000184986,ENSG00000226287,ENSG00000233493,ENSG00000141933,ENSG00000226085,ENSG00000255559"
-# subset_ensembles <- as.vector(strsplit(subset_ensembles, ","))[[1]]
-# subset_genes <- "CROCCP2,CTB-79E8.3,DPM3,FOXN3-AS1,GAS5,HCG4P11,HDAC4-AS1,HES4,HNRNPD-DT,LINC00865,MFSD3,PSMA6P1,PYURF,RN7SL2,RN7SL3,RP11-533E19.7,RP11-59C5.3,RPL13AP5,RPS3P3,RPS9,SNHG32,SNHG5,SNHG8,SNX32,TMEM121,TMEM191A,TMEM238,TPGS1,UQCRFS1P1,ZNF252P-AS1"
-# subset_genes <- as.vector(strsplit(subset_genes, ","))[[1]]
-# make_boxplot_gene_expression(subset_ensembles, subset_genes, "./data/Plots/Top_30_gene_expression_box_plot.png")
+# RUN gene expression top 30 genes union
+dataset_union <- readxl::read_excel("./data/Predictions/best_dge_genes_union.xlsx")
+subset_ensembles_union <- dataset_union$ensemble[1:30]
+subset_genes_union <- dataset_union$gene_name[1:30]
+make_boxplot_gene_expression(subset_ensembles_union, subset_genes_union, "./data/Plots/Union_Top_30_gene_expression_box_plot.png")
+
+# RUN gene expression intersection
+dataset_intersection <- readxl::read_excel("./data/Predictions/best_dge_genes_intersection.xlsx")
+subset_ensembles_intersection <- dataset_intersection$ensemble
+subset_genes_intersection <- dataset_intersection$gene_name
+make_boxplot_gene_expression(subset_ensembles_intersection, subset_genes_intersection, "./data/Plots/Intersection_gene_expression_box_plot.png")
 
 # # run Volcanoplot for results from every DGE analysis
-# print("RUNNING DGE VOLCANO PLOTS")
-# VolcanoPlot_DGE(
-#   readxl::read_excel( "./data/DESeq2/All_GENES_DESeq2_RNA_SEQ.xlsx"),
-#   LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, NULL, NULL,
-#   "./data/Plots/DESeq2_volcano_plot.png"
-# )
-# VolcanoPlot_DGE(
-#   readxl::read_excel( "./data/EdgeR/All_GENES_EdgeR_RNA_SEQ.xlsx"),
-#   LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, NULL, NULL,
-#   "./data/Plots/EdgeR_volcano_plot.png"
-# )
-# VolcanoPlot_DGE(
-#   readxl::read_excel( "./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"),
-#   LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, NULL, NULL,
-#   "./data/Plots/LimmaVoom_volcano_plot.png"
-# )
+print("RUNNING DGE VOLCANO PLOTS")
+VolcanoPlot_DGE(
+  readxl::read_excel( "./data/DESeq2/All_GENES_DESeq2_RNA_SEQ.xlsx"),
+  LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, NULL, NULL,
+  "./data/Plots/DESeq2_volcano_plot.png"
+)
+VolcanoPlot_DGE(
+  readxl::read_excel( "./data/EdgeR/All_GENES_EdgeR_RNA_SEQ.xlsx"),
+  LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, NULL, NULL,
+  "./data/Plots/EdgeR_volcano_plot.png"
+)
+VolcanoPlot_DGE(
+  readxl::read_excel( "./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"),
+  LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, NULL, NULL,
+  "./data/Plots/LimmaVoom_volcano_plot.png"
+)
 
-# # run Volcanoplot for results from every DGE analysis with subset of genes found by Random Forest
-# if (Sys.getenv("SUBSET_ENSEMBLES") != "") {
-#   print("RUNNING SUBSET DGE VOLCANO PLOTS")
-#   subset_ensembles <- as.vector(strsplit(Sys.getenv("SUBSET_ENSEMBLES"), ","))[[1]]
-#   VolcanoPlot_DGE(
-#     readxl::read_excel("./data/DESeq2/All_GENES_DESeq2_RNA_SEQ.xlsx"),
-#     LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles, NULL,
-#     "./data/Plots/Subset_DESeq2_volcano_plot.png"
-#   )
-#   VolcanoPlot_DGE(
-#     readxl::read_excel("./data/EdgeR/All_GENES_EdgeR_RNA_SEQ.xlsx"),
-#     LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles, NULL,
-#     "./data/Plots/Subset_EdgeR_volcano_plot.png"
-#   )
-#   VolcanoPlot_DGE(
-#     readxl::read_excel("./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"),
-#     LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles, NULL,
-#     "./data/Plots/Subset_LimmaVoom_volcano_plot.png"
-#   )
+# run Volcanoplot for results from every DGE analysis with subset of genes found by Path A
+dataset_rf <- readxl::read_excel("./data/Predictions/best_dge_genes_['RF'].xlsx")
+subset_ensembles_rf <- dataset_rf$ensemble
+VolcanoPlot_DGE(
+    readxl::read_excel("./data/DESeq2/All_GENES_DESeq2_RNA_SEQ.xlsx"),
+    LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles_rf, NULL,
+    "./data/Plots/Subset_PathA_DESeq2_volcano_plot.png"
+)
+VolcanoPlot_DGE(
+    readxl::read_excel("./data/EdgeR/All_GENES_EdgeR_RNA_SEQ.xlsx"),
+    LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles_rf, NULL,
+    "./data/Plots/Subset_PathA_EdgeR_volcano_plot.png"
+)
+VolcanoPlot_DGE(
+    readxl::read_excel("./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"),
+    LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles_rf, NULL,
+    "./data/Plots/Subset_PathA_LimmaVoom_volcano_plot.png"
+)
 
-#   if (Sys.getenv("SUBSET_GENE_NAMES") != "") {
-#     print("RUNNING SUBSET GENE EXPRESSION PLOT")
-#     subset_genes <- as.vector(strsplit(Sys.getenv("SUBSET_GENE_NAMES"), ","))[[1]]
-#     make_boxplot_gene_expression(subset_ensembles, subset_genes, "./data/Plots/Subset_gene_expression_box_plot.png")
-#   }
-# }
+# run Volcanoplot for results from every DGE analysis with subset of genes found by Path B
+dataset <- readxl::read_excel("./data/Predictions/best_dge_genes_['SVM', 'RF'].xlsx")
+subset_ensembles_rf_svm <- dataset$ensemble
+VolcanoPlot_DGE(
+    readxl::read_excel("./data/DESeq2/All_GENES_DESeq2_RNA_SEQ.xlsx"),
+    LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles_rf_svm, NULL,
+    "./data/Plots/Subset_PathB_DESeq2_volcano_plot.png"
+)
+VolcanoPlot_DGE(
+    readxl::read_excel("./data/EdgeR/All_GENES_EdgeR_RNA_SEQ.xlsx"),
+    LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles_rf_svm, NULL,
+    "./data/Plots/Subset_PathB_EdgeR_volcano_plot.png"
+)
+VolcanoPlot_DGE(
+    readxl::read_excel("./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx"),
+    LOG2_OFF, CUT_OFF, CODING_BIOTYPES, NON_CODING_BIOTYPES, subset_ensembles_rf_svm, NULL,
+    "./data/Plots/Subset_PathB_LimmaVoom_volcano_plot.png"
+)
 
-# TODO: MAKE THIS AS A FUNCTION / INTEGRATED FUNCTION
-# data <- readxl::read_excel("./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx")
-# subset_ensembles <- as.vector(strsplit(Sys.getenv("SUBSET_ENSEMBLES"), ","))[[1]]
-# subset_ensembles_2 <- as.vector(strsplit(Sys.getenv("SUBSET_ENSEMBLES_2"), ","))[[1]]
-# intersection <- intersect(subset_ensembles, subset_ensembles_2)
-# path_a <- setdiff(subset_ensembles, subset_ensembles_2)
-# path_b <- setdiff(subset_ensembles_2, subset_ensembles)
-# d <- data %>%
-#     mutate( Colorcode = case_when(
-#         Row.names %in% path_a ~ "DGE",
-#         Row.names %in% path_b ~ "ML",
-#         Row.names %in% intersection ~ "Intersection",
-#         TRUE ~ "not"
-#     ) )
-# text_repel_1 <- d[d$Row.names %in% c(subset_ensembles, subset_ensembles_2), ]
-# p <- ggplot(data = d, aes( x = Log2FoldChange, y = -log10( P.Adjust ), color = factor(Colorcode, levels=c("DGE", "ML", "Intersection", "not")), label = gene_name) ) +
-#     geom_hline(yintercept = -log10(CUT_OFF), linetype = "dashed", colour="darkgray", alpha=0.75) +
-#     geom_vline(xintercept = c(-LOG2_OFF, LOG2_OFF), linetype = "dashed", colour="darkgray", alpha=0.75) +
-#     theme_minimal() +
-#     geom_point() +
-#     geom_text_repel(data = text_repel_1, size=5.5) +
-#     labs(x = "Log2 Fold Change", y="-Log10(P-Adjust value)") +
-#     scale_color_manual(
-#         values = c(DGE = colors[2], ML = colors[7], Intersection=colors[4], not = colors[10]),
-#         labels = c(DGE = "Path A", ML = "Path B", Intersection="Intersection", not = "Other" )
-#     ) +
-#     scale_y_continuous(breaks = c(0, 1.00, -log10(CUT_OFF), 2.00, 3.00, 4.00),
-#                         labels = c(0, 1.00, round(-log10(CUT_OFF), digits = 2), 2, 3, 4)) +
-#     scale_x_continuous(breaks = c(-3, -2, -1, -LOG2_OFF, 0, LOG2_OFF, 1, 2, 3),
-#                         limits = c(-3, 3),
-#                         labels = c(-3, -2, -1, "-Log2(1.5)", 0 , "Log2(1.5)", 1, 2, 3)) +
-#     guides(color=guide_legend("Analytical approaches")) +
-#     theme(
-#     # Axis titles font size
-#     axis.title.x = element_text(size = 19),    # x-axis label size
-#     axis.title.y = element_text(size = 19),    # y-axis label size
+# Run final Volconaplot for comparison of all analytical approaches
+data <- readxl::read_excel("./data/LimmaVoom/All_GENES_LimmaVoom_RNA_SEQ.xlsx")
+d <- data %>%
+    mutate( Colorcode = case_when(
+        Row.names %in% subset_ensembles_intersection ~ "Intersection",
+        Row.names %in% subset_ensembles_rf ~ "A",
+        Row.names %in% subset_ensembles_rf_svm ~ "B",
+        TRUE ~ "not"
+    ) )
+text_repel_1 <- d[d$Row.names %in% unique(c(subset_ensembles_rf, subset_ensembles_rf_svm)), ]
+p <- ggplot(data = d, aes( x = Log2FoldChange, y = -log10( P.Adjust ), color = factor(Colorcode, levels=c("A", "B", "Intersection", "not")), label = gene_name) ) +
+    geom_hline(yintercept = -log10(CUT_OFF), linetype = "dashed", colour="darkgray", alpha=0.75) +
+    geom_vline(xintercept = c(-LOG2_OFF, LOG2_OFF), linetype = "dashed", colour="darkgray", alpha=0.75) +
+    theme_minimal() +
+    geom_point() +
+    geom_text_repel(data = text_repel_1, size=5.5) +
+    labs(x = "Log2 Fold Change", y="-Log10(P-Adjust value)") +
+    scale_color_manual(
+        values = c(A = colors[2], B = colors[7], Intersection=colors[4], not = colors[10]),
+        labels = c(A = "Path A", B = "Path B", Intersection="Intersection", not = "Other" )
+    ) +
+    scale_y_continuous(breaks = c(0, 1.00, -log10(CUT_OFF), 2.00, 3.00, 4.00),
+                        labels = c(0, 1.00, round(-log10(CUT_OFF), digits = 2), 2, 3, 4)) +
+    scale_x_continuous(breaks = c(-3, -2, -1, -LOG2_OFF, 0, LOG2_OFF, 1, 2, 3),
+                        limits = c(-3, 3),
+                        labels = c(-3, -2, -1, "-Log2(1.5)", 0 , "Log2(1.5)", 1, 2, 3)) +
+    guides(color=guide_legend("Analytical approaches")) +
+    theme(
+    # Axis titles font size
+    axis.title.x = element_text(size = 19),    # x-axis label size
+    axis.title.y = element_text(size = 19),    # y-axis label size
 
-#     # Axis tick labels font size
-#     axis.text.x = element_text(size = 17),     # x-axis ticks (labels) size
-#     axis.text.y = element_text(size = 17),     # y-axis ticks (labels) size
+    # Axis tick labels font size
+    axis.text.x = element_text(size = 17),     # x-axis ticks (labels) size
+    axis.text.y = element_text(size = 17),     # y-axis ticks (labels) size
 
-#     # Legend title and text font size
-#     legend.title = element_text(size = 17),    # Legend title size
-#     legend.text = element_text(size = 16)      # Legend labels size
-#     )
-# ggsave("./data/Plots/Comparison_analytical_approaches_Volcanoplot.png", p, width=18, height=10, dpi=720)
+    # Legend title and text font size
+    legend.title = element_text(size = 17),    # Legend title size
+    legend.text = element_text(size = 16)      # Legend labels size
+    )
+ggsave("./data/Plots/Comparison_analytical_approaches_Volcanoplot.png", p, width=18, height=10, dpi=720)

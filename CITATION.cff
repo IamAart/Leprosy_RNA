@@ -17,4 +17,8 @@ authors:
     family-names: Eerde
     email: e.r.van.eerde@umail.leidenuniv.nl
     affiliation: Leiden University
+  - given-names: Matheus
+    family-names: Rogério Almeida
+    email: m.rogerio_almeida@lumc.nl
+    affiliation: Leids Universitair Medisch Centrum
 repository-code: 'https://github.com/IamAart/Leprosy_RNA'
